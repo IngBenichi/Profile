@@ -1,0 +1,245 @@
+{
+  "profile": {
+    "name": "Camilo Benitez",
+    "title": "Backend Software Engineer",
+    "description": "Building robust, scalable backend systems and APIs that power modern applications. Specializing in distributed systems, microservices architecture, and cloud infrastructure.",
+    "about": "I'm a passionate Backend Software Engineer with over 7 years of experience designing and implementing scalable, high-performance systems. My journey in software development began during my computer science studies, where I discovered my passion for solving complex problems through elegant backend solutions.",
+    "profileImage": "/placeholder.svg?height=256&width=256"
+  },
+  "skills": {
+    "languages": [
+      "JavaScript/TypeScript",
+      "Python",
+      "Java",
+      "Go",
+      "C#",
+      "PHP",
+      "Rust",
+      "SQL"
+    ],
+    "frameworks": [
+      "Node.js",
+      "Express",
+      "Django",
+      "Flask",
+      "Spring Boot",
+      "FastAPI",
+      "NestJS",
+      "GraphQL"
+    ],
+    "databases": [
+      "PostgreSQL",
+      "MongoDB",
+      "MySQL",
+      "Redis",
+      "Elasticsearch",
+      "DynamoDB",
+      "Cassandra",
+      "SQLite"
+    ],
+    "tools": [
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Azure",
+      "CI/CD",
+      "Git",
+      "Terraform",
+      "Prometheus"
+    ]
+  },
+  "projects": [
+    {
+      "id": 1,
+      "title": "Distributed Task Queue System",
+      "role": "Lead Backend Developer",
+      "description": "Designed and implemented a scalable distributed task queue system capable of processing millions of jobs per day with fault tolerance and automatic retries.",
+      "technologies": [
+        "Node.js",
+        "Redis",
+        "PostgreSQL",
+        "Docker",
+        "AWS"
+      ],
+      "features": [
+        "Horizontally scalable worker architecture",
+        "Priority-based job scheduling",
+        "Real-time monitoring dashboard",
+        "Failure recovery mechanisms"
+      ],
+      "githubUrl": "https://github.com",
+      "demoUrl": "https://example.com",
+      "imageUrl": "/placeholder.svg?height=300&width=600"
+    },
+    {
+      "id": 2,
+      "title": "E-commerce Microservices API",
+      "role": "Backend Engineer",
+      "description": "Built a microservices-based API for a high-traffic e-commerce platform, handling product catalog, inventory, orders, and payment processing.",
+      "technologies": [
+        "Java",
+        "Spring Boot",
+        "MongoDB",
+        "Kafka",
+        "Kubernetes"
+      ],
+      "features": [
+        "Service discovery and load balancing",
+        "Event-driven architecture",
+        "Distributed transaction management",
+        "API gateway with rate limiting"
+      ],
+      "githubUrl": "https://github.com",
+      "demoUrl": "https://example.com",
+      "imageUrl": "/placeholder.svg?height=300&width=600"
+    },
+    {
+      "id": 3,
+      "title": "Real-time Analytics Platform",
+      "role": "Full Stack Developer",
+      "description": "Created a real-time analytics platform that processes and visualizes streaming data from IoT devices, with customizable dashboards and alerts.",
+      "technologies": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "Redis",
+        "WebSockets",
+        "React"
+      ],
+      "features": [
+        "Stream processing pipeline",
+        "Time-series data storage",
+        "Anomaly detection algorithms",
+        "Real-time visualization components"
+      ],
+      "githubUrl": "https://github.com",
+      "demoUrl": "https://example.com",
+      "imageUrl": "/placeholder.svg?height=300&width=600"
+    },
+    {
+      "id": 4,
+      "title": "Content Management API",
+      "role": "Backend Developer",
+      "description": "Developed a headless CMS API with advanced content modeling, versioning, and multi-language support for a digital publishing company.",
+      "technologies": [
+        "Node.js",
+        "GraphQL",
+        "MongoDB",
+        "ElasticSearch",
+        "Docker"
+      ],
+      "features": [
+        "Content versioning and rollbacks",
+        "Full-text search capabilities",
+        "Role-based access control",
+        "Webhook integrations"
+      ],
+      "githubUrl": "https://github.com",
+      "demoUrl": "https://example.com",
+      "imageUrl": "/placeholder.svg?height=300&width=600"
+    }
+  ],
+  "experience": [
+    {
+      "id": 1,
+      "company": "TechCorp Solutions",
+      "position": "Senior Backend Engineer",
+      "period": "2020 - Present",
+      "description": "Leading the development of distributed systems and microservices architecture for enterprise clients.",
+      "achievements": [
+        "Redesigned the core API platform, improving throughput by 300% and reducing latency by 60%",
+        "Implemented a new caching strategy that reduced database load by 45%",
+        "Led the migration from monolith to microservices architecture",
+        "Mentored junior developers and established backend development best practices"
+      ]
+    },
+    {
+      "id": 2,
+      "company": "DataFlow Systems",
+      "position": "Backend Developer",
+      "period": "2018 - 2020",
+      "description": "Worked on high-performance data processing systems for financial services clients.",
+      "achievements": [
+        "Built RESTful APIs handling over 10,000 requests per second",
+        "Designed and implemented a real-time transaction monitoring system",
+        "Optimized database queries, reducing average response time by 75%",
+        "Contributed to the development of the company's internal framework"
+      ]
+    },
+    {
+      "id": 3,
+      "company": "InnovateTech Startup",
+      "position": "Full Stack Developer",
+      "period": "2016 - 2018",
+      "description": "Early employee at a startup building a SaaS platform for business analytics.",
+      "achievements": [
+        "Developed the backend infrastructure from scratch using Node.js and MongoDB",
+        "Implemented authentication and authorization systems with OAuth2",
+        "Created data processing pipelines for handling large datasets",
+        "Collaborated with frontend team to design and implement APIs"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": 1,
+      "degree": "Master of Science in Computer Science",
+      "institution": "University of Technology",
+      "period": "2014 - 2016",
+      "description": "Specialized in Distributed Systems and Database Management. Thesis on \"Optimizing Query Performance in Distributed Database Systems.\"",
+      "courses": [
+        "Advanced Algorithms",
+        "Distributed Systems",
+        "Database Systems",
+        "Cloud Computing",
+        "System Architecture"
+      ]
+    },
+    {
+      "id": 2,
+      "degree": "Bachelor of Science in Computer Engineering",
+      "institution": "State University",
+      "period": "2010 - 2014",
+      "description": "Graduated with honors. Focused on software engineering and computer networks.",
+      "courses": [
+        "Data Structures",
+        "Operating Systems",
+        "Computer Networks",
+        "Software Engineering",
+        "Web Development"
+      ]
+    }
+  ],
+  "testimonials": [
+    {
+      "id": 1,
+      "quote": "John is an exceptional backend engineer who consistently delivers robust and scalable solutions. His deep understanding of distributed systems has been invaluable to our team.",
+      "author": "Sarah Johnson",
+      "position": "CTO at TechCorp Solutions"
+    },
+    {
+      "id": 2,
+      "quote": "Working with John was a game-changer for our project. His expertise in API design and database optimization transformed our platform's performance.",
+      "author": "Michael Chen",
+      "position": "Product Manager at DataFlow Systems"
+    },
+    {
+      "id": 3,
+      "quote": "John's technical skills are matched only by his ability to explain complex concepts clearly. He's not just a developer but a true problem solver.",
+      "author": "Emily Rodriguez",
+      "position": "Engineering Director at CloudScale"
+    },
+    {
+      "id": 4,
+      "quote": "I've worked with many backend developers, but John stands out for his attention to detail and commitment to writing clean, maintainable code.",
+      "author": "David Kim",
+      "position": "Lead Developer at InnovateTech"
+    }
+  ],
+  "contact": {
+    "email": "john.doe@example.com",
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "github": "https://github.com/johndoe",
+    "lookingForWork": "I'm currently open to new opportunities where I can leverage my expertise in building scalable backend systems and APIs. Whether you need help with a specific project or are looking to add a backend specialist to your team, I'd love to discuss how I can contribute."
+  }
+}
