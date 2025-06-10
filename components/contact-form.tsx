@@ -33,12 +33,13 @@ const ContactForm = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-4">
               <CheckCircle className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-medium text-foreground mb-2">Message Sent!</h3>
+            {/* Mensaje de éxito */}
+            <h3 className="text-xl font-medium text-foreground mb-2">¡Mensaje enviado!</h3>
             <p className="text-muted-foreground mb-6">
-              Thank you for reaching out. I'll get back to you as soon as possible.
+              Gracias por contactarme. Te responderé lo antes posible.
             </p>
             <Button variant="outline" onClick={() => setIsSubmitted(false)}>
-              Send Another Message
+              Enviar otro mensaje
             </Button>
           </div>
         </CardContent>
@@ -49,47 +50,47 @@ const ContactForm = () => {
   return (
     <Card className="border-border/40 shadow-md">
       <CardHeader>
-        <CardTitle>Send a Message</CardTitle>
-        <CardDescription>Fill out the form below and I'll get back to you as soon as possible.</CardDescription>
+        <CardTitle>Enviar un Mensaje</CardTitle>
+        <CardDescription>Completa el formulario y te responderé lo antes posible.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" placeholder="John" required />
+              <Label htmlFor="firstName">Nombre</Label>
+              <Input id="firstName" placeholder="Juan" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" placeholder="Smith" required />
+              <Label htmlFor="lastName">Apellido</Label>
+              <Input id="lastName" placeholder="Pérez" required />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="john@example.com" required />
+            <Label htmlFor="email">Correo electrónico</Label>
+            <Input id="email" type="email" placeholder="juan@ejemplo.com" required />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input id="subject" placeholder="Project Inquiry" required />
+            <Label htmlFor="subject">Asunto</Label>
+            <Input id="subject" placeholder="Consulta de Proyecto" required />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
-            <Textarea id="message" placeholder="Tell me about your project or job opportunity..." rows={5} required />
+            <Label htmlFor="message">Mensaje</Label>
+            <Textarea id="message" placeholder="Cuéntame sobre tu proyecto u oportunidad laboral..." rows={5} required />
           </div>
 
           <Button type="submit" className="w-full gap-2 group" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Sending...
+                Enviando...
               </>
             ) : (
               <>
                 <Send className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                Send Message
+                Enviar Mensaje
               </>
             )}
           </Button>
