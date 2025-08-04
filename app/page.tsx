@@ -1,8 +1,10 @@
-'use client';
+"use client";
+import { Roboto_Slab } from "next/font/google";
 
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -36,9 +38,9 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import { Roboto_Slab } from "next/font/google";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+
 const DynamicGalaxyScene = dynamic(() => import("@/components/galaxy-canvas"), {
   ssr: false,
 });
@@ -51,45 +53,45 @@ export default function Home() {
       {/* Header with theme toggle */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-6xl items-center justify-between">
+          {/* Logo */}
           <Link href="/" className="font-semibold text-xl">
             Camilo<span className="text-primary">Benitez</span>
           </Link>
+
+          {/* Navegación (solo en pantallas medianas y grandes) */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="#about"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Sobre mí
-            </Link>
-            <Link
-              href="#skills"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Habilidades
-            </Link>
-            <Link
-              href="#projects"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Proyectos
-            </Link>
-            <Link
-              href="#experience"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Experiencia
-            </Link>
-            <Link
-              href="#contact"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Contacto
-            </Link>
+            {[
+              { href: "#about", label: "Sobre mí" },
+              { href: "#skills", label: "Habilidades" },
+              { href: "#projects", label: "Proyectos" },
+              { href: "#experience", label: "Experiencia" },
+              { href: "#education", label: "Educación" },
+              { href: "#certificados", label: "Certificados" },
+              { href: "#contact", label: "Contacto" },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="relative text-sm font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-1 group"
+              >
+                <span>{item.label}</span>
+                <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+              </Link>
+            ))}
           </nav>
-          <div className="flex items-center gap-4">
+
+          {/* Contenedor de acciones: Tema y botón de contacto */}
+          <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button asChild>
-              <Link href="#contact">Contact Me</Link>
+            <Button
+              asChild
+              className="bg-gradient-to-r from-primary via-fuchsia-500 to-blue-500 text-white font-semibold shadow-lg hover:from-primary/90 hover:to-blue-500/90 transition-all"
+              size="sm"
+            >
+              <Link href="#contact" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Contáctame
+              </Link>
             </Button>
           </div>
         </div>
@@ -99,7 +101,7 @@ export default function Home() {
       <motion.section
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
         className="relative py-24 md:py-32 px-4 overflow-hidden bg-gradient-to-br from-background to-muted/50"
       >
@@ -110,7 +112,7 @@ export default function Home() {
               className="md:w-2/3"
               initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: 'easeOut' }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
               viewport={{ once: true }}
             >
               <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium mb-6">
@@ -154,7 +156,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link
-                  href="https://www.linkedin.com/in/camilo-ben%C3%ADtez-benichi-aa6557314/"
+                  href="https://www.linkedin.com/in/benichidev"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -173,9 +175,19 @@ export default function Home() {
             </motion.div>
             <motion.div
               className="md:w-1/3 flex justify-center"
-              initial={{ opacity: 0, scale: 0.8, filter: 'blur(8px)', rotateY: 45 }}
-              whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)', rotateY: 0 }}
-              transition={{ duration: 1, ease: 'easeOut' }}
+              initial={{
+                opacity: 0,
+                scale: 0.8,
+                filter: "blur(8px)",
+                rotateY: 45,
+              }}
+              whileInView={{
+                opacity: 1,
+                scale: 1,
+                filter: "blur(0px)",
+                rotateY: 0,
+              }}
+              transition={{ duration: 1, ease: "easeOut" }}
               viewport={{ once: true }}
               style={{ perspective: 1000 }}
             >
@@ -199,7 +211,7 @@ export default function Home() {
         id="about"
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-10 px-2"
       >
@@ -213,27 +225,44 @@ export default function Home() {
           <div className="grid md:grid-cols-1 gap-12 items-center">
             <div className="space-y-6">
               <p className="text-lg text-muted-foreground">
-                Soy un desarrollador backend apasionado, con 2 años de
-                experiencia construyendo sistemas eficientes y escalables. Mi
-                camino en el desarrollo de software comenzó durante mis estudios
-                en ingeniería de sistemas, donde descubrí mi gusto por resolver
-                problemas complejos mediante soluciones backend bien
-                estructuradas.
+                Soy un{" "}
+                <span className="font-semibold text-foreground">
+                  Ingeniero De Software Backend
+                </span>{" "}
+                con una profunda pasión por la tecnología y la resolución de
+                problemas complejos. Desde mis primeros pasos en la ingeniería
+                de sistemas, he encontrado en el desarrollo backend el espacio
+                ideal para combinar lógica, creatividad y eficiencia.
               </p>
               <p className="text-lg text-muted-foreground">
-                A lo largo de este tiempo, me he enfocado en el diseño de APIs
-                robustas, arquitecturas basadas en microservicios y aplicaciones
-                orientadas a datos. Me interesa especialmente el diseño de
-                sistemas, la optimización del rendimiento y el desarrollo nativo
-                en la nube.
+                Mi experiencia abarca{" "}
+                <span className="font-semibold text-foreground">
+                  Diseño De APIs Robustas
+                </span>
+                ,{" "}
+                <span className="font-semibold text-foreground">
+                  Arquitecturas De Microservicios
+                </span>{" "}
+                y la implementación de soluciones escalables en la nube.
+                Disfruto optimizando el rendimiento de sistemas, asegurando la
+                calidad del código y aplicando buenas prácticas de ingeniería
+                para crear productos confiables y mantenibles.
               </p>
               <p className="text-lg text-muted-foreground">
-                Actualmente, sigo en constante aprendizaje, siempre buscando
-                mejorar mis habilidades y estar al tanto de las últimas
-                tendencias en tecnologías backend y sistemas distribuidos. En mi
-                tiempo libre, disfruto colaborar en proyectos open-source,
-                compartir conocimientos con otros desarrolladores y experimentar
-                con nuevas herramientas del ecosistema backend.
+                Me motiva el aprendizaje continuo y la colaboración. He
+                participado en proyectos open-source, hackathons y equipos
+                multidisciplinarios, donde he fortalecido habilidades técnicas y
+                de comunicación. Mi enfoque está en aportar valor real,
+                adaptándome rápidamente a nuevas tecnologías y retos.
+              </p>
+              <p className="text-lg text-muted-foreground">
+                Actualmente, busco contribuir en proyectos que requieran{" "}
+                <span className="font-semibold text-foreground">
+                  Soluciones Backend Innovadoras
+                </span>{" "}
+                y donde pueda seguir creciendo profesionalmente. Si buscas a
+                alguien comprometido, curioso y orientado a resultados,
+                ¡conversemos!
               </p>
             </div>
           </div>
@@ -243,9 +272,9 @@ export default function Home() {
       {/* Technical Skills Section */}
       <motion.section
         id="skills"
-        initial={{ opacity: 0, scale: 0.95, filter: 'blur(8px)' }}
-        whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-        transition={{ duration: 0.9, ease: 'easeOut' }}
+        initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
+        whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-10 px-2 bg-muted/30"
       >
@@ -257,6 +286,12 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-foreground">
               Habilidades Técnicas
             </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
+              Dominio de tecnologías backend modernas, frameworks robustos,
+              bases de datos relacionales y no relacionales, así como
+              herramientas DevOps y metodologías ágiles. Mi enfoque está en la
+              calidad, escalabilidad y seguridad del software.
+            </p>
           </div>
 
           <Tabs defaultValue="languages" className="w-full">
@@ -267,232 +302,441 @@ export default function Home() {
               <TabsTrigger value="tools">DevOps y Herramientas</TabsTrigger>
             </TabsList>
 
+            {/* Lenguajes */}
             <TabsContent value="languages" className="mt-6">
               <motion.div
                 key="languages"
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                transition={{ duration: 1.0, type: 'spring', bounce: 0.3 }}
+                initial={{
+                  opacity: 0,
+                  y: 40,
+                  scale: 0.95,
+                  filter: "blur(8px)",
+                }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
+                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
                 className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
               >
                 {/* Python */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/python-svgrepo-com.svg"
                       alt="Python"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Python</p>
+                    <p className="font-semibold text-base sm:text-lg">Python</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      5+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* Javascript */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/javascript-svgrepo-com.svg"
                       alt="Javascript"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">
+                    <p className="font-semibold text-base sm:text-lg">
                       Javascript
                     </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      3+ años
+                    </div>
                   </CardContent>
                 </Card>
+                {/* Typescript */}
+                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
+                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
+                    <img
+                      src="/typescript-svgrepo-com.svg"
+                      alt="Typescript"
+                      className="w-10 h-10 mx-auto mb-2"
+                    />
+                    <p className="font-semibold text-base sm:text-lg">
+                      Typescript
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
+                  </CardContent>
+                </Card> */}
                 {/* PHP */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/php-svgrepo-com.svg"
                       alt="PHP"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">PHP</p>
+                    <p className="font-semibold text-base sm:text-lg">PHP</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
             </TabsContent>
 
+            {/* Frameworks */}
             <TabsContent value="frameworks" className="mt-6">
               <motion.div
                 key="frameworks"
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                transition={{ duration: 1.0, type: 'spring', bounce: 0.3 }}
+                initial={{
+                  opacity: 0,
+                  y: 40,
+                  scale: 0.95,
+                  filter: "blur(8px)",
+                }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
+                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
                 className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
               >
                 {/* Node.js */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/node-js-svgrepo-com.svg"
                       alt="Node.js"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Node.js</p>
+                    <p className="font-semibold text-base sm:text-lg">
+                      Node.js
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      4+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* Express */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/express-svgrepo-com.svg"
                       alt="Express"
                       className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-primary/60 bg-white p-1"
                     />
-                    <p className="font-medium text-base sm:text-lg">Express</p>
+                    <p className="font-semibold text-base sm:text-lg">
+                      Express
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      4+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* Django */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/django-icon-svgrepo-com.svg"
                       alt="Django"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Django</p>
+                    <p className="font-semibold text-base sm:text-lg">Django</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      3+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* Flask */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/flask-svgrepo-com.svg"
                       alt="Flask"
                       className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-primary/60 bg-white p-1"
                     />
-                    <p className="font-medium text-base sm:text-lg">Flask</p>
+                    <p className="font-semibold text-base sm:text-lg">Flask</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* FastAPI */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/fastapi-svgrepo-com.svg"
                       alt="FastAPI"
                       className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-primary/60 bg-white p-1"
                     />
-                    <p className="font-medium text-base sm:text-lg">FastAPI</p>
+                    <p className="font-semibold text-base sm:text-lg">
+                      FastAPI
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* Laravel */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/laravel-svgrepo-com.svg"
                       alt="Laravel"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Laravel</p>
+                    <p className="font-semibold text-base sm:text-lg">
+                      Laravel
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
             </TabsContent>
 
+            {/* Bases de datos */}
             <TabsContent value="databases" className="mt-6">
               <motion.div
                 key="databases"
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                transition={{ duration: 1.0, type: 'spring', bounce: 0.3 }}
+                initial={{
+                  opacity: 0,
+                  y: 40,
+                  scale: 0.95,
+                  filter: "blur(8px)",
+                }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
+                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
                 className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
               >
                 {/* PostgreSQL */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/postgresql-svgrepo-com.svg"
                       alt="PostgreSQL"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">
+                    <p className="font-semibold text-base sm:text-lg">
                       PostgreSQL
                     </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      3+ años
+                    </div>
                   </CardContent>
                 </Card>
+
                 {/* MySQL */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/mysql-svgrepo-com.svg"
                       alt="MySQL"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">MySQL</p>
+                    <p className="font-semibold text-base sm:text-lg">MySQL</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
+
                 {/* SQLite */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/sqlite-svgrepo-com.svg"
                       alt="SQLite"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">SQLite</p>
+                    <p className="font-semibold text-base sm:text-lg">SQLite</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
+
+                {/* MongoDB */}
+                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
+                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
+                    <img
+                      src="/mongodb-svgrepo-com.svg"
+                      alt="MongoDB"
+                      className="w-10 h-10 mx-auto mb-2"
+                    />
+                    <p className="font-semibold text-base sm:text-lg">
+                      MongoDB
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Básico
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      1 año
+                    </div>
+                  </CardContent>
+                </Card> */}
               </motion.div>
             </TabsContent>
 
+            {/* DevOps y Herramientas */}
             <TabsContent value="tools" className="mt-6">
               <motion.div
                 key="tools"
-                initial={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: 'blur(8px)' }}
-                transition={{ duration: 1.0, type: 'spring', bounce: 0.3 }}
+                initial={{
+                  opacity: 0,
+                  y: 40,
+                  scale: 0.95,
+                  filter: "blur(8px)",
+                }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
+                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
                 className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
               >
                 {/* Docker */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/docker-svgrepo-com.svg"
                       alt="Docker"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Docker</p>
+                    <p className="font-semibold text-base sm:text-lg">Docker</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      3+ años
+                    </div>
                   </CardContent>
                 </Card>
-                {/* Azure Devops */}
-                <Card className="border-border/40 transition-shadow">
+                {/* Azure DevOps */}
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/azure-devops-svgrepo-com.svg"
                       alt="Azure DevOps"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Azure DevOps</p>
+                    <p className="font-semibold text-base sm:text-lg">
+                      Azure DevOps
+                    </p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
                   </CardContent>
                 </Card>
                 {/* AWS */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/aws-svgrepo-com.svg"
                       alt="AWS"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">AWS</p>
+                    <p className="font-semibold text-base sm:text-lg">AWS</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Básico
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      1 año
+                    </div>
                   </CardContent>
                 </Card>
                 {/* Git */}
-                <Card className="border-border/40 transition-shadow">
+                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
                   <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
                     <img
                       src="/git-svgrepo-com.svg"
                       alt="Git"
                       className="w-10 h-10 mx-auto mb-2"
                     />
-                    <p className="font-medium text-base sm:text-lg">Git</p>
+                    <p className="font-semibold text-base sm:text-lg">Git</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      5+ años
+                    </div>
                   </CardContent>
                 </Card>
+                {/* Linux */}
+                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
+                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
+                    <img
+                      src="/linux-svgrepo-com.svg"
+                      alt="Linux"
+                      className="w-10 h-10 mx-auto mb-2"
+                    />
+                    <p className="font-semibold text-base sm:text-lg">Linux</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Avanzado
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      4+ años
+                    </div>
+                  </CardContent>
+                </Card> */}
+                {/* CI/CD */}
+                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
+                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
+                    <img
+                      src="/cicd-svgrepo-com.svg"
+                      alt="CI/CD"
+                      className="w-10 h-10 mx-auto mb-2"
+                    />
+                    <p className="font-semibold text-base sm:text-lg">CI/CD</p>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      Intermedio
+                    </span>
+                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      2+ años
+                    </div>
+                  </CardContent>
+                </Card> */}
               </motion.div>
+              <div className="mt-8 text-center text-muted-foreground text-sm">
+                Experiencia en integración y despliegue continuo, automatización
+                de pipelines, monitoreo y gestión de infraestructura en la nube.
+              </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -503,7 +747,7 @@ export default function Home() {
         id="projects"
         initial={{ opacity: 0, y: 80, rotateY: 45 }}
         whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-        transition={{ duration: 1, ease: 'easeOut' }}
+        transition={{ duration: 1, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-10 px-2"
       >
@@ -517,7 +761,10 @@ export default function Home() {
             </h2>
           </div>
           <div className="relative">
-            <Carousel className="w-full" opts={{ slidesToScroll: 1, align: "start" }}>
+            <Carousel
+              className="w-full"
+              opts={{ slidesToScroll: 1, align: "start" }}
+            >
               <CarouselContent>
                 {/* Proyecto 1 */}
                 <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
@@ -589,7 +836,7 @@ export default function Home() {
         id="experience"
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-8 px-2 sm:py-12 sm:px-2 bg-muted/30"
       >
@@ -603,8 +850,8 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="w-full max-w-2xl mx-auto">
-            <div className="max-h-96 overflow-y-auto rounded-lg border border-border/30 bg-background/80 p-2 sm:p-4 shadow-sm">
+          <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
+            <div className="flex-1 rounded-lg border border-border/30 bg-background/80 p-4 shadow-md flex flex-col justify-between">
               <ExperienceCard
                 company="Domotes S.A.S"
                 position="Backend Developer Junior"
@@ -621,6 +868,22 @@ export default function Home() {
                 ]}
               />
             </div>
+            <div className="flex-1 rounded-lg border border-border/30 bg-background/80 p-4 shadow-md flex flex-col justify-between">
+              <ExperienceCard
+                company="ARC4M"
+                position="Co-Founder & Software Engineer"
+                period="Jan 2024 - Present"
+                location="Barranquilla, Atlántico, Colombia · Remoto"
+                description="Como cofundador y software engineer en ARC4M, lidero el desarrollo de soluciones tecnológicas innovadoras, participando en la toma de decisiones estratégicas y en la implementación de arquitecturas robustas para nuestros productos y servicios."
+                achievements={[
+                  "Co-fundé la empresa y participé en la definición de la visión tecnológica",
+                  "Diseñé e implementé arquitecturas escalables para productos SaaS",
+                  "Lideré equipos de desarrollo en proyectos de software a medida",
+                  "Implementé prácticas de DevOps y despliegue continuo",
+                  "Colaboré con clientes para entender y resolver necesidades técnicas complejas",
+                ]}
+              />
+            </div>
           </div>
         </div>
       </motion.section>
@@ -628,9 +891,9 @@ export default function Home() {
       {/* Education Section */}
       <motion.section
         id="education"
-        initial={{ opacity: 0, scale: 0.95, filter: 'blur(8px)' }}
-        whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-        transition={{ duration: 0.9, ease: 'easeOut' }}
+        initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
+        whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.9, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-10 px-2"
       >
@@ -640,22 +903,46 @@ export default function Home() {
               <span className="font-bold text-xl">05</span>
             </div>
             <h2 className="text-3xl font-bold text-foreground">Educación</h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
+              Formación académica sólida en ingeniería de sistemas,
+              complementada con proyectos prácticos, participación en
+              actividades extracurriculares y un enfoque constante en el
+              aprendizaje de nuevas tecnologías.
+            </p>
           </div>
 
-          <div className="max-w-3xl mx-auto">
-            <Card className="border-border/40">
-              <CardHeader>
-                <CardTitle>Ingeniería en Sistemas</CardTitle>
-                <CardDescription>
-                  Universidad de la Costa CUC, Feb 2023 - Dic 2027
-                </CardDescription>
+          <div className="max-w-3xl mx-auto space-y-8">
+            <Card className="border-border/40 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader className="flex flex-row items-center gap-4">
+                {/* <div className="flex-shrink-0">
+                  <Image
+                    src="/cuc-logo.png"
+                    alt="Universidad de la Costa CUC"
+                    width={56}
+                    height={56}
+                    className="rounded-full border border-border bg-white"
+                  />
+                </div> */}
+                <div>
+                  <CardTitle className="text-2xl font-semibold">
+                    Ingeniería en Sistemas
+                  </CardTitle>
+                  <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1">
+                    <span>Universidad de la Costa CUC</span>
+                    <span className="hidden sm:inline mx-2">•</span>
+                    <span>Feb 2023 - Dic 2027 (En curso)</span>
+                  </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  Actualmente cursando la carrera de Ingeniería en Sistemas con
-                  énfasis en desarrollo de software y diseño de sistemas.
+                <p className="text-muted-foreground mb-4">
+                  Actualmente cursando la carrera de Ingeniería en Sistemas, con
+                  énfasis en desarrollo de software, arquitectura de sistemas y
+                  tecnologías backend. He participado en proyectos
+                  colaborativos, hackathons universitarios y actividades de
+                  investigación.
                 </p>
-                <div className="mt-4">
+                <div className="mb-4">
                   <h4 className="font-medium mb-2">Cursos relevantes:</h4>
                   <div className="flex flex-wrap gap-2">
                     {[
@@ -664,12 +951,36 @@ export default function Home() {
                       "Ingeniería de Software",
                       "Redes de Computadoras",
                       "Desarrollo Web",
+                      "Arquitectura de Computadores",
+                      "Sistemas Distribuidos",
+                      "Seguridad Informática",
                     ].map((course) => (
                       <Badge key={course} variant="secondary">
                         {course}
                       </Badge>
                     ))}
                   </div>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Logros y actividades:</h4>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                    <li>
+                      Participación en hackathons y competencias de programación
+                      universitaria
+                    </li>
+                    <li>
+                      Miembro activo del semillero de investigación en
+                      tecnologías backend
+                    </li>
+                    <li>
+                      Desarrollo de proyectos académicos enfocados en APIs y
+                      microservicios
+                    </li>
+                    <li>
+                      Colaboración en iniciativas de software libre y mentoría a
+                      estudiantes de semestres inferiores
+                    </li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
@@ -682,7 +993,7 @@ export default function Home() {
         id="certificados"
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-10 px-2 bg-muted/30"
       >
@@ -699,353 +1010,422 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="relative">
-            <Carousel
-              className="w-full"
-              opts={{ slidesToScroll: 1, align: "start" }}
-            >
-              <CarouselContent>
-                {/* Certificado 1 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/django.png"
-                            alt="Certificado Django"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          Django
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+          <div className="relative"></div>
+          <Carousel
+            className="w-full"
+            opts={{ slidesToScroll: 1, align: "start" }}
+          >
+            <CarouselContent>
+              {/* Certificado 1 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/django.png"
                           alt="Certificado Django"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">Django</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 2 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/devops.png"
-                            alt="Certificado DevOps"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          DevOps
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        Django
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/django.png"
+                        alt="Certificado Django"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">Django</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 2 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/devops.png"
                           alt="Certificado DevOps"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">DevOps</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 3 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/django_rest.png"
-                            alt="Certificado Django REST"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          Django REST
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        DevOps
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/devops.png"
+                        alt="Certificado DevOps"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">DevOps</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 3 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/django_rest.png"
                           alt="Certificado Django REST"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
                         Django REST
                       </h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 4 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/docker.png"
-                            alt="Certificado Docker"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          Docker
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/django_rest.png"
+                        alt="Certificado Django REST"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">
+                      Django REST
+                    </h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 4 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/docker.png"
                           alt="Certificado Docker"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">Docker</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 5 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/fastapi.png"
-                            alt="Certificado FastAPI"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          FastAPI
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        Docker
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/docker.png"
+                        alt="Certificado Docker"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">Docker</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 5 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/fastapi.png"
                           alt="Certificado FastAPI"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">FastAPI</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 6 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/ia.png"
-                            alt="Certificado Inteligencia Artificial"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          Inteligencia Artificial
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        FastAPI
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/fastapi.png"
+                        alt="Certificado FastAPI"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">FastAPI</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 6 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/ia.png"
                           alt="Certificado Inteligencia Artificial"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
                         Inteligencia Artificial
                       </h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 7 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/laravel_rest.png"
-                            alt="Certificado Laravel REST"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          Laravel REST
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/ia.png"
+                        alt="Certificado Inteligencia Artificial"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">
+                      Inteligencia Artificial
+                    </h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 7 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/laravel_rest.png"
                           alt="Certificado Laravel REST"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
                         Laravel REST
                       </h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 8 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/laravel.png"
-                            alt="Certificado Laravel"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          Laravel
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/laravel_rest.png"
+                        alt="Certificado Laravel REST"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">
+                      Laravel REST
+                    </h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 8 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/laravel.png"
                           alt="Certificado Laravel"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">Laravel</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 9 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/oauth.png"
-                            alt="Certificado OAuth"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          OAuth
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        Laravel
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/laravel.png"
+                        alt="Certificado Laravel"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">Laravel</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 9 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/oauth.png"
                           alt="Certificado OAuth"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">OAuth</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-                {/* Certificado 10 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                        <div className="w-full h-48 relative mb-4">
-                          <Image
-                            src="/owasp.png"
-                            alt="Certificado OWASP"
-                            fill
-                            className="object-contain rounded"
-                          />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground text-center">
-                          OWASP
-                        </h3>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                      <div className="w-full flex justify-center">
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        OAuth
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/oauth.png"
+                        alt="Certificado OAuth"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">OAuth</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+              {/* Certificado 10 */}
+              <CarouselItem
+                className="pl-2 pr-2 flex justify-center 
+  basis-full max-w-full 
+  sm:basis-1/2 sm:max-w-1/2 
+  md:basis-1/3 md:max-w-1/3 
+  lg:basis-1/4 lg:max-w-1/4
+            "
+              >
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
+                      <div className="w-full h-48 relative mb-4">
                         <Image
                           src="/owasp.png"
                           alt="Certificado OWASP"
-                          width={900}
-                          height={600}
-                          className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                          style={{ maxWidth: "100%" }}
+                          fill
+                          className="object-contain rounded"
                         />
                       </div>
-                      <h3 className="text-xl font-bold text-center">OWASP</h3>
-                    </DialogContent>
-                  </Dialog>
-                </CarouselItem>
-              </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
-            </Carousel>
-          </div>
+                      <h3 className="text-lg font-semibold text-foreground text-center">
+                        OWASP
+                      </h3>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
+                    <div className="w-full flex justify-center">
+                      <Image
+                        src="/owasp.png"
+                        alt="Certificado OWASP"
+                        width={900}
+                        height={600}
+                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
+                        style={{ maxWidth: "100%" }}
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-center">OWASP</h3>
+                  </DialogContent>
+                </Dialog>
+              </CarouselItem>
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
       </motion.section>
 
@@ -1054,7 +1434,7 @@ export default function Home() {
         id="contact"
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true }}
         className="py-10 px-2"
       >
@@ -1088,12 +1468,12 @@ export default function Home() {
                     <Linkedin className="h-5 w-5 text-primary" />
                   </div>
                   <a
-                    href="https://www.linkedin.com/in/camilo-ben%C3%ADtez-benichi-aa6557314/"
+                    href="https://www.linkedin.com/in/benichidev"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    linkedin.com/in/camilo-benitez
+                    linkedin.com/in/benichidev
                   </a>
                 </div>
                 <div className="flex items-center gap-3">
