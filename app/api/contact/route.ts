@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PRIVATE_BASE_URL || 'http://localhost:3000';
     const logoUrl = `${baseUrl}/logo.jpg`;
     const mailOptions = {
       from: process.env.SMTP_USER,
