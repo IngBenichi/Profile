@@ -128,13 +128,13 @@ export default function Home() {
               <div className="mt-8 flex flex-wrap gap-4">
                 <Button size="lg" className="gap-2 group" asChild>
                   <Link
-                    href="/resume.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  href="/CV%20Camilo%20Benitez%20Valdes.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   >
-                    <Download size={18} />
-                    Descargar Hoja de Vida
-                    <MoveRight className="ml-1 h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                  <Download size={18} />
+                  Descargar Hoja de Vida
+                  <MoveRight className="ml-1 h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="gap-2" asChild>
@@ -761,72 +761,92 @@ export default function Home() {
             </h2>
           </div>
           <div className="relative">
-            <Carousel
-              className="w-full"
-              opts={{ slidesToScroll: 1, align: "start" }}
-            >
-              <CarouselContent>
-                {/* Proyecto 1 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <ProjectCard
-                    title="Benichi's Blog"
-                    role="Desarrollador Backend Líder"
-                    description="Desarrollé una plataforma de blog personal enfocada en rendimiento y SEO, utilizando renderizado del lado del servidor y generación de sitios estáticos."
-                    technologies={["Django", "PostgreSQL", "Azure", "Docker"]}
-                    features={[
-                      "Arquitectura de trabajadores escalable horizontalmente",
-                      "Planificación de trabajos por prioridad",
-                      "Panel de monitoreo en tiempo real",
-                      "Mecanismos de recuperación ante fallos",
-                    ]}
-                    githubUrl="https://github.com/IngBenichi/My-Blog-App-Django"
-                    demoUrl="https://benichi.online/"
-                    imageUrl="/blog.png?height=300&width=600"
-                  />
-                </CarouselItem>
-                {/* Proyecto 2 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <ProjectCard
-                    title="Restaurant-Order-System"
-                    role="Ingeniero Backend"
-                    description="Diseñé un sistema de gestión de pedidos para restaurantes con actualizaciones en tiempo real y una interfaz amigable para clientes y personal."
-                    technologies={["Python"]}
-                    features={["Seguimiento de pedidos en tiempo real"]}
-                    githubUrl="https://github.com/IngBenichi/Restaurant-Order-System"
-                    demoUrl="https://restaurant-order-system-9tn7.onrender.com/login"
-                    imageUrl="/placeholder.svg?height=300&width=600"
-                  />
-                </CarouselItem>
-                {/* Proyecto 3 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <ProjectCard
-                    title="EasyCurrency"
-                    role="Desarrollador Backend"
-                    description="Sistema de monitoreo de tasas de cambio con actualizaciones en tiempo real y análisis de datos históricos, usando arquitectura de microservicios."
-                    technologies={["Python"]}
-                    features={["Tasas de cambio en tiempo real"]}
-                    githubUrl="https://github.com/IngBenichi/EasyCurrency"
-                    demoUrl="https://easycurrency.onrender.com/rates"
-                    imageUrl="/api.png?height=300&width=600"
-                  />
-                </CarouselItem>
-                {/* Proyecto 4 */}
-                <CarouselItem className="pl-2 pr-2 flex justify-center basis-full max-w-full">
-                  <ProjectCard
-                    title="E-COMMERCE-API"
-                    role="Desarrollador Backend"
-                    description="API RESTful para una plataforma de e-commerce, enfocada en escalabilidad y seguridad, con autenticación de usuarios y gestión de productos."
-                    technologies={["Node.js", "Express"]}
-                    features={["Autenticación y autorización de usuarios"]}
-                    githubUrl="https://github.com/IngBenichi/E-COMMERCE-API"
-                    demoUrl=""
-                    imageUrl="/placeholder.svg?height=300&width=600"
-                  />
-                </CarouselItem>
-              </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
-            </Carousel>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ProjectCard
+                title="Benichi's Blog"
+                role="Desarrollador Backend Líder"
+                description="Desarrollé una plataforma de blog personal enfocada en rendimiento y SEO, utilizando renderizado del lado del servidor y generación de sitios estáticos."
+                technologies={["Django", "PostgreSQL", "Google CLoud", "Docker"]}
+                features={[
+                  "Arquitectura de trabajadores escalable horizontalmente",
+                  "Planificación de trabajos por prioridad",
+                  "Panel de monitoreo en tiempo real",
+                  "Mecanismos de recuperación ante fallos",
+                ]}
+                githubUrl="https://github.com/IngBenichi/Blog-Benichi"
+                demoUrl="https://my-blog-app-django.onrender.com/"
+                imageUrl="/blog.png?height=300&width=600"
+              />
+              <ProjectCard
+                title="YTMediaConverter"
+                role="Ingeniero Backend"
+                description="Aplicación para descargar y convertir videos de YouTube en MP3 o MP4, con interfaz gráfica intuitiva y barra de progreso en tiempo real."
+                technologies={["Python"]}
+                features={["Seguimiento de pedidos en tiempo real"]}
+                githubUrl="https://github.com/IngBenichi/YTMediaConverter"
+                imageUrl="/yt.JPG?height=300&width=600"
+              />
+              <ProjectCard
+                title="Crypto Dashboard"
+                role="Desarrollador Frontend"
+                description="Dashboard interactivo para visualizar datos de criptomonedas en tiempo real con gráficos y estadísticas detalladas."
+                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
+                features={[
+                  "Visualización de datos en tiempo real",
+                  "Gráficos interactivos de precios",
+                  "Dashboard responsivo y moderno",
+                  "Integración con APIs de criptomonedas",
+                ]}
+                githubUrl="https://github.com/IngBenichi/crypto-dashboard"
+                demoUrl="https://v0-crypto-dashboard-mu-tawny.vercel.app/"
+                imageUrl="/crypto.png?height=300&width=600"
+              />
+              <ProjectCard
+                title="Auction Product Page"
+                role="Desarrollador Frontend"
+                description="Página de producto de subasta con diseño moderno y funcionalidades interactivas para una experiencia de usuario optimizada."
+                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
+                features={[
+                  "Interfaz moderna y responsive",
+                  "Componentes reutilizables",
+                  "Diseño optimizado para conversión",
+                  "Experiencia de usuario fluida",
+                ]}
+                githubUrl="https://github.com/IngBenichi/auction-product-page"
+                demoUrl="https://v0-auction-product-page.vercel.app/"
+                imageUrl="/auction.png?height=300&width=600"
+              />
+              <ProjectCard
+                title="Benichi Dev Studio"
+                role="Desarrollador Frontend"
+                description="Landing page profesional para estudio de desarrollo, con diseño moderno y secciones informativas sobre servicios y proyectos."
+                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
+                features={[
+                  "Diseño profesional y atractivo",
+                  "Secciones de servicios y portafolio",
+                  "Optimizado para SEO",
+                  "Animaciones y transiciones suaves",
+                ]}
+                githubUrl="https://github.com/IngBenichi/benichi-dev-studio-landing-page"
+                demoUrl="https://v0-benichi-dev-studio-landing-page.vercel.app/"
+                imageUrl="/benichi-dev.png?height=300&width=600"
+              />
+              <ProjectCard
+                title="Battle Zone Landing"
+                role="Desarrollador Frontend"
+                description="Landing page temática para zona de batalla, con diseño impactante y elementos visuales dinámicos."
+                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
+                features={[
+                  "Diseño temático y visual atractivo",
+                  "Animaciones y efectos interactivos",
+                  "Responsive design",
+                  "Optimización de performance",
+                ]}
+                githubUrl="https://github.com/IngBenichi/battle-zone-landing-page"
+                demoUrl="https://v0-battle-zone-landing-page.vercel.app/"
+                imageUrl="/battle.png?height=300&width=600"
+              />
+            </div>
           </div>
         </div>
       </motion.section>

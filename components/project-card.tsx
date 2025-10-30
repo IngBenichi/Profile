@@ -15,7 +15,7 @@ interface ProjectCardProps {
   technologies: string[]
   features: string[]
   githubUrl: string
-  demoUrl: string
+  demoUrl?: string
   imageUrl: string
 }
 
@@ -42,12 +42,14 @@ const ProjectCard = ({
         />
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <div className="flex gap-2">
-            <Button size="sm" variant="secondary" asChild>
-              <Link href={demoUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Demo
-              </Link>
-            </Button>
+            {demoUrl && (
+              <Button size="sm" variant="secondary" asChild>
+                <Link href={demoUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  Demo
+                </Link>
+              </Button>
+            )}
             <Button size="sm" variant="secondary" asChild>
               <Link href={githubUrl} target="_blank" rel="noopener noreferrer">
                 <Github className="h-4 w-4 mr-1" />
