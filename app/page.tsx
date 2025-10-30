@@ -780,7 +780,7 @@ export default function Home() {
                       "Mecanismos de recuperación ante fallos",
                     ]}
                     githubUrl="https://github.com/IngBenichi/My-Blog-App-Django"
-                    demoUrl="https://blog.benichi.online"
+                    demoUrl="https://benichi.online/"
                     imageUrl="/blog.png?height=300&width=600"
                   />
                 </CarouselItem>
