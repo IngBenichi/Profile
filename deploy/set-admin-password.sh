@@ -10,6 +10,8 @@ USER="${1:-admin}"
 read -rs -p "Basic-auth password for '$USER': " PASS; echo
 HASH="$(openssl passwd -apr1 "$PASS")"
 printf '%s:%s\n' "$USER" "$HASH" > nginx/htpasswd
-chmod 600 nginx/htpasswd
+# 644 so the nginx worker (uid 101 in the container) can read it; the value is
+# an apr1 hash, not a plaintext secret, and the file stays gitignored.
+chmod 644 nginx/htpasswd
 echo "Wrote nginx/htpasswd for user '$USER'."
 echo "Reload nginx to apply:  docker compose exec nginx nginx -s reload"

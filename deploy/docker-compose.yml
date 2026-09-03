@@ -35,6 +35,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # Reload every 6h so renewed certificates are picked up without a manual step.
+    command: >
+      /bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done &
+      nginx -g "daemon off;"'
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
