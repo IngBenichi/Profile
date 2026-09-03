@@ -1,0 +1,12 @@
+.git
+node_modules
+.next
+out
+build
+npm-debug.log*
+.env*
+deploy
+Dockerfile
+.dockerignore
+*.md
+pnpm-lock.yaml

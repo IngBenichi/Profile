@@ -18,6 +18,11 @@ yarn-error.log*
 
 # env files
 .env*
+!*.env.example
+
+# deploy secrets / runtime
+/deploy/.env
+/deploy/nginx/htpasswd
 
 # vercel
 .vercel

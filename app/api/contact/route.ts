@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     });
 
     // Construir URL absoluta para el logo
-    const logoUrl = `https://portfolio.benichi.online/logo.jpg`;
+    const logoUrl = `${process.env.SITE_URL || 'https://benichi.dev'}/logo.jpg`;
     const mailOptions = {
       from: process.env.SMTP_USER,
       to: process.env.CONTACT_RECEIVER || process.env.SMTP_USER,
