@@ -61,3 +61,60 @@
 html {
   scroll-behavior: smooth;
 }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* ============================================================ benichi.dev v2
+   Editorial-of-engineering direction. One committed dark world: a lifted
+   graphite ground (not the near-black of v1), a sage-shifted system green,
+   and a warm signal hue for marginalia. */
+:root {
+  --bn-bg:        #1c1d22;
+  --bn-bg-sunk:   #17181c;
+  --bn-surface:   #24252c;
+  --bn-surface-2: #2b2c34;
+  --bn-line:      rgba(233, 235, 244, 0.10);
+  --bn-line-soft: rgba(233, 235, 244, 0.055);
+
+  --bn-text:      #eceef3;
+  --bn-dim:       #a4a6b1;
+  --bn-faint:     #70727c;
+
+  --bn-accent:      #63d7a2;
+  --bn-accent-deep: #37a679;
+  --bn-accent-wash: rgba(99, 215, 162, 0.12);
+  --bn-signal:      #e7b27c;
+
+  --bn-serif: var(--font-newsreader), "Newsreader", Georgia, "Times New Roman", serif;
+  --bn-sans:  var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bn-mono:  var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --bn-step--1: 0.78rem;
+  --bn-step-0:  1rem;
+  --bn-step-1:  1.1875rem;
+  --bn-step-2:  1.5rem;
+  --bn-step-3:  2.15rem;
+  --bn-step-4:  3.1rem;
+
+  --bn-rail: 116px;
+  --bn-maxw: 1180px;
+}
+
+/* film grain — the editorial-print texture over the graphite */
+.bn-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.026;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Reveals: visible by default (SSR / no-JS / first frame). The client only
+   hides + animates elements that are still below the fold when it mounts. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal].bn-armed { opacity: 0; transform: translateY(14px); }
+  [data-reveal].bn-in { opacity: 1; transform: none; transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
+}

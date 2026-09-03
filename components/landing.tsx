@@ -2,171 +2,147 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import type { OrbitNodeKey } from "@/components/hero-orbit";
+import Nav from "@/components/nav";
 import type { LandingContent, Lang, Loc } from "@/lib/content";
 
-const HeroOrbit = dynamic(() => import("@/components/hero-orbit"), { ssr: false });
-
-const SG = "var(--font-space-grotesk), 'Space Grotesk', sans-serif";
-const MONO = "var(--font-jetbrains-mono), 'JetBrains Mono', monospace";
-const BODY = "var(--font-inter), 'Inter', sans-serif";
+const HeroObject = dynamic(() => import("@/components/hero-object"), { ssr: false });
 
 const p = (v: Loc, lang: Lang) => v?.[lang] ?? v?.es ?? "";
 
-/* Static UI chrome — not editable content. */
 const UI = {
   es: {
-    nav: { home: "INDEX", about: "SOBRE MÍ", stack: "STACK", work: "TRABAJO", experience: "EXPERIENCIA", contact: "CONTACTO" },
-    ctaWork: "Ver trabajo", ctaContact: "Contactar", scroll: "SCROLL",
-    systemPanelTitle: "BENICHI://SYSTEM", systemStatus: "ONLINE",
-    domains: { backend: "Backend", cloud: "Cloud", devops: "DevOps", security: "Seguridad", ai: "IA", apis: "APIs" },
-    source: "Código", demo: "Demo",
-    boot: ["INICIANDO SISTEMA BENICHI...", "CARGANDO NÚCLEO...", "CARGANDO RED...", "CARGANDO IA...", "CARGANDO PROYECTOS...", "SISTEMA EN LÍNEA"],
-    skip: "CLIC PARA SALTAR",
+    kicker: "Disponible",
+    scroll: "Scroll",
+    status: "DISPONIBLE",
+    source: "Código",
+    demo: "Demo",
+    nav: { about: "Sobre mí", stack: "Stack", work: "Proyectos", experience: "Experiencia", contact: "Contacto" },
+    sectionLabel: { about: "Sobre mí", stack: "Stack", work: "Proyectos", experience: "Experiencia", contact: "Contacto" },
+    domains: ["Backend", "Cloud", "DevOps", "Seguridad", "IA", "APIs"],
   },
   en: {
-    nav: { home: "INDEX", about: "ABOUT", stack: "STACK", work: "WORK", experience: "EXPERIENCE", contact: "CONTACT" },
-    ctaWork: "View work", ctaContact: "Get in touch", scroll: "SCROLL",
-    systemPanelTitle: "BENICHI://SYSTEM", systemStatus: "ONLINE",
-    domains: { backend: "Backend", cloud: "Cloud", devops: "DevOps", security: "Security", ai: "AI", apis: "APIs" },
-    source: "Source", demo: "Live demo",
-    boot: ["INITIALIZING BENICHI SYSTEM...", "LOADING CORE...", "LOADING NETWORK...", "LOADING AI...", "LOADING PROJECTS...", "SYSTEM ONLINE"],
-    skip: "CLICK TO SKIP",
+    kicker: "Available",
+    scroll: "Scroll",
+    status: "AVAILABLE",
+    source: "Source",
+    demo: "Live demo",
+    nav: { about: "About", stack: "Stack", work: "Work", experience: "Experience", contact: "Contact" },
+    sectionLabel: { about: "About", stack: "Stack", work: "Work", experience: "Experience", contact: "Contact" },
+    domains: ["Backend", "Cloud", "DevOps", "Security", "AI", "APIs"],
   },
 } as const;
-
-const DOMAIN_DEFS: { key: OrbitNodeKey; color: string }[] = [
-  { key: "backend", color: "oklch(0.75 0.14 150)" },
-  { key: "cloud", color: "oklch(0.72 0.14 250)" },
-  { key: "devops", color: "oklch(0.78 0.12 200)" },
-  { key: "security", color: "oklch(0.7 0.16 25)" },
-  { key: "ai", color: "oklch(0.74 0.14 300)" },
-  { key: "apis", color: "oklch(0.85 0.006 250)" },
-];
 
 const LEVEL_PCT: Record<string, number> = {
   "Básico": 35, Basic: 35, Intermedio: 65, Intermediate: 65, Avanzado: 90, Advanced: 90,
 };
 
-const NAV_ORDER = ["home", "about", "stack", "work", "experience", "contact"] as const;
-const SECTION_NUM: Record<string, string> = { about: "01", stack: "02", work: "03", experience: "04" };
-
-const BASE_CSS = `
-@keyframes bnBoot { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes bnPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
-@keyframes bnBounce { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(8px); opacity: 1; } }
-@keyframes bnSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes bnMarqueeL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@keyframes bnDrift { 0%, 100% { transform: translate(-8%,-8%) scale(1); } 50% { transform: translate(6%,8%) scale(1.18); } }
-.bn-root [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.bn-root ::selection { background: oklch(0.75 0.14 150 / 0.35); color: oklch(0.98 0 0); }
-.bn-marquee:hover { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-  .bn-root *, .bn-root *::before, .bn-root *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-}
-`;
+const NAV_ORDER = ["about", "stack", "work", "experience", "contact"] as const;
+const SEC_NUM: Record<string, string> = { about: "01", stack: "02", work: "03", experience: "04", contact: "05" };
 
 export default function Landing({ content }: { content: LandingContent }) {
   const [lang, setLang] = useState<Lang>("es");
-  const [booted, setBooted] = useState(false);
-  const [bootRendered, setBootRendered] = useState(true);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string>("home");
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [active, setActive] = useState("top");
   const [isMobile, setIsMobile] = useState(false);
-  const [showCursor, setShowCursor] = useState(false);
-  const [soundOn, setSoundOn] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [soundOn, setSoundOn] = useState(false);
+  const [webgl, setWebgl] = useState(true);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const cursorRef = useRef<HTMLDivElement | null>(null);
-  const labelEls = useRef<Partial<Record<OrbitNodeKey, HTMLElement | null>>>({});
+  const objRef = useRef<HTMLDivElement | null>(null);
+  const heroTxtRef = useRef<HTMLDivElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioNodesRef = useRef<{ master: GainNode; oscs: { o: OscillatorNode; lfo: OscillatorNode }[] } | null>(null);
 
   const ui = UI[lang];
   const s = content.site;
+  const t = (v: Loc) => p(v, lang);
 
-  const finishBoot = useCallback(() => {
-    setBooted(true);
-    window.setTimeout(() => setBootRendered(false), 700);
-  }, []);
-
+  /* ---------------------------------------------------------------- setup */
   useEffect(() => {
     setMounted(true);
-    const rm = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const mobile = window.innerWidth < 860;
-    const cursor = !rm && !!window.matchMedia?.("(pointer: fine)").matches;
-    setReducedMotion(rm);
-    setIsMobile(mobile);
-    setShowCursor(cursor);
-
-    const onResize = () => setIsMobile(window.innerWidth < 860);
-    window.addEventListener("resize", onResize);
-
-    let onCursorMove: ((e: MouseEvent) => void) | undefined;
-    if (cursor) {
-      onCursorMove = (e) => {
-        if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-      };
-      window.addEventListener("mousemove", onCursorMove);
+    const mm = () => setIsMobile(window.innerWidth < 900);
+    mm();
+    window.addEventListener("resize", mm);
+    try {
+      const c = document.createElement("canvas");
+      setWebgl(!!(c.getContext("webgl2") || c.getContext("webgl")));
+    } catch {
+      setWebgl(false);
     }
+    return () => window.removeEventListener("resize", mm);
+  }, []);
 
-    const bootTimer = window.setTimeout(finishBoot, rm ? 300 : 2300);
-    return () => {
-      window.clearTimeout(bootTimer);
-      window.removeEventListener("resize", onResize);
-      if (onCursorMove) window.removeEventListener("mousemove", onCursorMove);
-    };
-  }, [finishBoot]);
-
+  /* --------------------------------------------------- scroll spy + reveal */
   useEffect(() => {
     if (!mounted) return;
     const root = rootRef.current;
     if (!root) return;
 
     const spy = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setActiveSection(e.target.getAttribute("data-section") || "home")),
-      { rootMargin: "-35% 0px -55% 0px", threshold: 0 },
+      (es) => es.forEach((e) => e.isIntersecting && setActive(e.target.id || "top")),
+      { rootMargin: "-42% 0px -52% 0px" },
     );
-    root.querySelectorAll("[data-section]").forEach((el) => spy.observe(el));
+    root.querySelectorAll("section[id]").forEach((el) => spy.observe(el));
 
-    const reveal = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting) {
-          (e.target as HTMLElement).style.opacity = "1";
-          (e.target as HTMLElement).style.transform = "none";
-          reveal.unobserve(e.target);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    let rev: IntersectionObserver | undefined;
+    if (!reduce) {
+      rev = new IntersectionObserver(
+        (es) =>
+          es.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.remove("bn-armed");
+              e.target.classList.add("bn-in");
+              rev!.unobserve(e.target);
+            }
+          }),
+        { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
+      );
+      root.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.92) {
+          el.classList.add("bn-armed");
+          rev!.observe(el);
         }
-      }),
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
-    );
-    root.querySelectorAll("[data-reveal]").forEach((el) => reveal.observe(el));
-
-    const bars = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting) {
-          (e.target as HTMLElement).style.width = e.target.getAttribute("data-target") + "%";
-          bars.unobserve(e.target);
-        }
-      }),
-      { threshold: 0.4 },
-    );
-    root.querySelectorAll("[data-bar]").forEach((el) => bars.observe(el));
+      });
+    }
 
     return () => {
       spy.disconnect();
-      reveal.disconnect();
-      bars.disconnect();
+      rev?.disconnect();
     };
   }, [mounted, lang]);
 
+  /* ------------------------------------------------------------- parallax */
+  useEffect(() => {
+    if (!mounted) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.innerWidth < 900) return;
+    let ticking = false;
+    const apply = () => {
+      const y = window.scrollY;
+      if (objRef.current) objRef.current.style.transform = `translate3d(0, ${(y * 0.14).toFixed(1)}px, 0)`;
+      if (heroTxtRef.current) heroTxtRef.current.style.transform = `translate3d(0, ${(y * -0.04).toFixed(1)}px, 0)`;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(apply);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    apply();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mounted]);
+
+  /* -------------------------------------------------------- ambient audio */
   const stopAmbient = useCallback(() => {
     const ctx = audioCtxRef.current;
-    const nodes = audioNodesRef.current;
-    if (!ctx || !nodes) return;
-    nodes.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
-    window.setTimeout(() => nodes.oscs.forEach(({ o, lfo }) => { try { o.stop(); lfo.stop(); } catch {} }), 900);
+    const n = audioNodesRef.current;
+    if (!ctx || !n) return;
+    n.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+    window.setTimeout(() => n.oscs.forEach(({ o, lfo }) => { try { o.stop(); lfo.stop(); } catch {} }), 900);
     audioNodesRef.current = null;
   }, []);
 
@@ -180,10 +156,10 @@ export default function Landing({ content }: { content: LandingContent }) {
       const master = ctx.createGain();
       master.gain.value = 0;
       master.connect(ctx.destination);
-      master.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 1.6);
+      master.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 1.6);
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
-      filter.frequency.value = 800;
+      filter.frequency.value = 780;
       filter.connect(master);
       const freqs = [110, 164.81, 220];
       const oscs = freqs.map((f, i) => {
@@ -197,10 +173,10 @@ export default function Landing({ content }: { content: LandingContent }) {
         o.start();
         const lfo = ctx.createOscillator();
         lfo.frequency.value = 0.05 + i * 0.02;
-        const lfoGain = ctx.createGain();
-        lfoGain.gain.value = 4;
-        lfo.connect(lfoGain);
-        lfoGain.connect(o.detune);
+        const lg = ctx.createGain();
+        lg.gain.value = 4;
+        lfo.connect(lg);
+        lg.connect(o.detune);
         lfo.start();
         return { o, lfo };
       });
@@ -210,22 +186,6 @@ export default function Landing({ content }: { content: LandingContent }) {
     }
   }, []);
 
-  const playTick = useCallback(() => {
-    const ctx = audioCtxRef.current;
-    if (!soundOn || !ctx) return;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = 880;
-    g.gain.value = 0.0001;
-    o.connect(g);
-    g.connect(ctx.destination);
-    o.start();
-    g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
-    o.stop(ctx.currentTime + 0.2);
-  }, [soundOn]);
-
   useEffect(() => () => {
     stopAmbient();
     const ctx = audioCtxRef.current;
@@ -233,391 +193,481 @@ export default function Landing({ content }: { content: LandingContent }) {
   }, [stopAmbient]);
 
   const toggleSound = () => {
-    if (soundOn) stopAmbient();
-    else startAmbient();
+    soundOn ? stopAmbient() : startAmbient();
     setSoundOn((v) => !v);
   };
 
-  const scrollTo = useCallback((id: string) => {
+  const goTo = useCallback((id: string) => {
+    if (id === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const el = document.getElementById(id);
-    if (!el) return;
-    const y = el.getBoundingClientRect().top + window.pageYOffset - 64;
-    window.scrollTo({ top: y, behavior: "smooth" });
-    setMobileNavOpen(false);
-    playTick();
-  }, [playTick]);
-
-  const magnetMove = (e: React.MouseEvent<HTMLElement>) => {
-    const el = e.currentTarget;
-    const r = el.getBoundingClientRect();
-    const x = e.clientX - r.left - r.width / 2;
-    const y = e.clientY - r.top - r.height / 2;
-    el.style.transform = `translate(${x * 0.15}px, ${y * 0.3}px)`;
-  };
-  const magnetLeave = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = "translate(0,0)"; };
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
+  }, []);
 
   const tiltMove = (e: React.MouseEvent<HTMLElement>) => {
     const el = e.currentTarget;
     const r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width - 0.5;
     const py = (e.clientY - r.top) / r.height - 0.5;
-    el.style.transform = `perspective(900px) rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg) translateY(-4px)`;
-    el.style.boxShadow = "0 24px 44px -22px oklch(0.75 0.14 150 / 0.4)";
+    el.style.transform = `perspective(900px) rotateX(${(-py * 4).toFixed(2)}deg) rotateY(${(px * 6).toFixed(2)}deg) translateY(-3px)`;
   };
   const tiltLeave = (e: React.MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.transform = "none";
-    e.currentTarget.style.boxShadow = "none";
+    e.currentTarget.style.transform = "";
   };
 
-  const heroFallback = reducedMotion;
-  const eyebrowNum: React.CSSProperties = { fontFamily: MONO, fontSize: 12, color: "oklch(0.5 0.01 250)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 6, padding: "4px 9px" };
-  const dashedDot = (c: string): React.CSSProperties => ({ width: 20, height: 20, borderRadius: "50%", border: `1.5px dashed ${c}`, position: "relative", display: "inline-block", animation: "bnSpin 12s linear infinite" });
-
-  const timeline = useMemo(() => content.timeline.map((t) => ({ year: t.year, text: p(t.text, lang) })), [content.timeline, lang]);
+  const timeline = useMemo(() => content.timeline.map((x) => ({ year: x.year, text: t(x.text) })), [content.timeline, lang]);
+  const [feature, ...restProjects] = content.projects;
+  const now = new Date();
+  const folioDate = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
 
   return (
-    <div
-      ref={rootRef}
-      className="bn-root"
-      style={{
-        position: "relative",
-        minHeight: "100vh",
-        width: "100%",
-        background: "oklch(0.15 0.006 250)",
-        backgroundImage:
-          "linear-gradient(oklch(1 0 0 / 0.025) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.025) 1px, transparent 1px)",
-        backgroundSize: "48px 48px",
-        color: "oklch(0.96 0.003 250)",
-        fontFamily: BODY,
-        overflowX: "hidden",
-      }}
-    >
-      <style dangerouslySetInnerHTML={{ __html: BASE_CSS }} />
+    <div className="ed bn-grain" ref={rootRef}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-      {bootRendered && (
-        <div
-          onClick={() => !booted && finishBoot()}
-          style={{ position: "fixed", inset: 0, zIndex: 9999, background: "oklch(0.11 0.005 250)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: booted ? 0 : 1, pointerEvents: booted ? "none" : "auto", transition: "opacity 0.6s ease" }}
-        >
-          <div style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.08em", color: "oklch(0.75 0.14 150)", display: "flex", flexDirection: "column", gap: 10, textAlign: "center" }}>
-            {ui.boot.map((line, i) => (
-              <div key={i} style={{ animation: "bnBoot 0.4s ease forwards", animationDelay: `${(i * 0.32).toFixed(2)}s`, opacity: 0 }}>{line}</div>
-            ))}
+      <Nav lang={lang} onLang={() => setLang((l) => (l === "es" ? "en" : "es"))} soundOn={soundOn} onSound={toggleSound} active={active} onNavigate={goTo} />
+
+      {/* running folio */}
+      <aside className="folio" aria-hidden>
+        <span className="folio__dot" />
+        <span className="folio__b">benichi.dev</span>
+        <span>{folioDate}</span>
+        <span className="folio__sec">
+          {active !== "top" && SEC_NUM[active]
+            ? `§ ${SEC_NUM[active]} · ${ui.sectionLabel[active as keyof typeof ui.sectionLabel] ?? ""}`
+            : "§ 00 · Index"}
+        </span>
+        <span className="folio__status">{ui.status}</span>
+      </aside>
+
+      {/* ============================================================ hero */}
+      <header className="hero" id="top">
+        <div className="hero__obj" ref={objRef}>
+          <div className="hero__glow" />
+          {mounted && webgl && !isMobile && <HeroObject isMobile={isMobile} />}
+        </div>
+        <div className="hero__scrim" aria-hidden />
+
+        <div className="ed-wrap hero__grid">
+          <div className="hero__rail">
+            <span className="eyebrow">{folioDate}</span>
+            <span className="eyebrow" style={{ color: "var(--bn-accent)" }}>{ui.status}</span>
           </div>
-          <div style={{ position: "absolute", bottom: 36, left: 0, right: 0, textAlign: "center", fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)" }}>{ui.skip}</div>
+          <div className="hero__body" ref={heroTxtRef}>
+            <span className="kicker">
+              <span className="kicker__dot" />
+              {t(s.heroBadge)}
+            </span>
+            <p className="hero__role">{s.heroRealName} — {t(s.heroTitle)}</p>
+            <h1 className="hero__name">{s.heroName}</h1>
+            <p className="hero__lede">{t(s.heroCopy)}</p>
+            <div className="hero__meta">
+              {ui.domains.map((d) => (
+                <span key={d}>{d}</span>
+              ))}
+            </div>
+          </div>
         </div>
-      )}
 
-      {showCursor && (
-        <div ref={cursorRef} style={{ position: "fixed", top: 0, left: 0, width: 18, height: 18, marginLeft: -9, marginTop: -9, borderRadius: "50%", border: "1px solid oklch(0.96 0.003 250 / 0.6)", pointerEvents: "none", zIndex: 9000, willChange: "transform", transition: "opacity 0.2s" }} />
-      )}
-
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", background: "oklch(0.15 0.006 250 / 0.72)", backdropFilter: "blur(14px)", borderBottom: "1px solid oklch(1 0 0 / 0.08)" }}>
-        <div style={{ fontFamily: SG, fontWeight: 700, fontSize: 15, letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 9 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "oklch(0.75 0.14 150)", boxShadow: "0 0 8px oklch(0.75 0.14 150 / 0.8)", animation: "bnPulse 2.4s ease infinite", display: "inline-block" }} />
-          {s.heroName}
-        </div>
-
-        {isMobile ? (
-          <button onClick={() => setMobileNavOpen((v) => !v)} style={{ background: "none", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 8, width: 36, height: 32, color: "oklch(0.96 0.003 250)", fontFamily: MONO, cursor: "pointer" }}>
-            {mobileNavOpen ? "✕" : "≡"}
-          </button>
-        ) : (
-          <nav style={{ display: "flex", alignItems: "center", gap: 26 }}>
-            {NAV_ORDER.map((id) => {
-              const active = activeSection === id;
-              return (
-                <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); scrollTo(id); }} onMouseMove={magnetMove} onMouseLeave={magnetLeave}
-                  style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", color: active ? "oklch(0.96 0.003 250)" : "oklch(0.55 0.01 250)", fontWeight: active ? 600 : 400, textDecoration: "none", cursor: "pointer" }}>
-                  {ui.nav[id]}
-                </a>
-              );
-            })}
-            <button onClick={toggleSound} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "6px 13px", cursor: "pointer" }}>
-              {soundOn ? "SND: ON" : "SND: OFF"}
-            </button>
-            <button onClick={() => setLang((l) => (l === "es" ? "en" : "es"))} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "6px 13px", cursor: "pointer" }}>
-              {lang.toUpperCase()}
-            </button>
-          </nav>
-        )}
+        <span className="hero__scroll">{ui.scroll} ↓</span>
       </header>
 
-      {mobileNavOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 190, background: "oklch(0.15 0.006 250 / 0.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 28 }}>
-          {NAV_ORDER.map((id) => (
-            <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); scrollTo(id); }} style={{ fontFamily: SG, fontSize: 26, fontWeight: 600, color: "oklch(0.96 0.003 250)", textDecoration: "none" }}>{ui.nav[id]}</a>
-          ))}
-          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <button onClick={toggleSound} style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "8px 18px" }}>{soundOn ? "SND: ON" : "SND: OFF"}</button>
-            <button onClick={() => setLang((l) => (l === "es" ? "en" : "es"))} style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "8px 18px" }}>{lang.toUpperCase()}</button>
-          </div>
-        </div>
-      )}
-
-      {/* hero */}
-      <section id="home" data-section="home" style={{ position: "relative", height: "100vh", minHeight: 640, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          {mounted && !heroFallback && <HeroOrbit labelEls={labelEls.current} isMobile={isMobile} />}
-          {heroFallback && (
-            <div style={{ position: "absolute", top: "50%", left: "50%", width: 520, height: 520, margin: "-260px 0 0 -260px", borderRadius: "50%", border: "1px solid oklch(1 0 0 / 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: "70%", height: "70%", borderRadius: "50%", border: "1px dashed oklch(0.75 0.14 150 / 0.4)" }} />
+      <main>
+        {/* ======================================================== about */}
+        <section className="sec" id="about">
+          <div className="ed-wrap">
+            <div className="sec__head">
+              <span className="eyebrow"><i>§ {SEC_NUM.about}</i></span>
+              <h2 className="sec__title" data-reveal>{t(s.aboutEyebrow)}</h2>
             </div>
-          )}
-          {!heroFallback && DOMAIN_DEFS.map((d) => (
-            <div key={d.key} ref={(el) => { labelEls.current[d.key] = el; }}
-              style={{ position: "absolute", top: 0, left: 0, display: "flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: "oklch(0.9 0.005 250)", whiteSpace: "nowrap", opacity: 0, willChange: "transform" }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.color }} />
-              {ui.domains[d.key]}
-            </div>
-          ))}
-        </div>
-
-        <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 24px", maxWidth: 760 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid oklch(1 0 0 / 0.18)", borderRadius: 999, padding: "7px 16px", fontFamily: MONO, fontSize: 11, letterSpacing: "0.05em", color: "oklch(0.75 0.14 150)", marginBottom: 28 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "oklch(0.75 0.14 150)", animation: "bnPulse 2s ease infinite", display: "inline-block" }} />
-            {p(s.heroBadge, lang)}
-          </div>
-          <h1 style={{ fontFamily: SG, fontWeight: 700, fontSize: "clamp(48px,10vw,108px)", lineHeight: 0.95, letterSpacing: "-0.02em", margin: 0, color: "oklch(0.97 0.003 250)" }}>{s.heroName}</h1>
-          <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: "0.08em", color: "oklch(0.5 0.01 250)", marginTop: 14 }}>{s.heroRealName} — {p(s.heroTitle, lang)}</div>
-          <p style={{ fontSize: 17, lineHeight: 1.6, color: "oklch(0.68 0.012 250)", marginTop: 22, maxWidth: 560 }}>{p(s.heroCopy, lang)}</p>
-          <div style={{ display: "flex", gap: 14, marginTop: 34, flexWrap: "wrap", justifyContent: "center" }}>
-            <button onClick={() => scrollTo("work")} onMouseMove={magnetMove} onMouseLeave={magnetLeave} style={{ fontFamily: BODY, fontWeight: 600, fontSize: 14, background: "oklch(0.96 0.003 250)", color: "oklch(0.15 0.006 250)", border: "none", borderRadius: 8, padding: "13px 24px", cursor: "pointer" }}>{ui.ctaWork}</button>
-            <button onClick={() => scrollTo("contact")} onMouseMove={magnetMove} onMouseLeave={magnetLeave} style={{ fontFamily: BODY, fontWeight: 600, fontSize: 14, background: "transparent", color: "oklch(0.96 0.003 250)", border: "1px solid oklch(1 0 0 / 0.24)", borderRadius: 8, padding: "13px 24px", cursor: "pointer" }}>{ui.ctaContact}</button>
-          </div>
-        </div>
-
-        <div style={{ position: "absolute", left: 28, bottom: 28, zIndex: 2, fontFamily: MONO, fontSize: 10, color: "oklch(0.55 0.01 250)", background: "oklch(0.18 0.007 250 / 0.7)", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 10, padding: "14px 16px", minWidth: 150, backdropFilter: "blur(8px)" }}>
-          <div style={{ letterSpacing: "0.08em", color: "oklch(0.85 0.005 250)", marginBottom: 8, fontWeight: 600 }}>{ui.systemPanelTitle}</div>
-          {DOMAIN_DEFS.map((d) => (
-            <div key={d.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "2.5px 0" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.color }} />
-                {ui.domains[d.key]}
-              </span>
-              <span style={{ color: "oklch(0.75 0.14 150)" }}>{ui.systemStatus}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ position: "absolute", right: 28, bottom: 28, zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.15em", color: "oklch(0.55 0.01 250)" }}>
-          <span style={{ writingMode: "vertical-rl" }}>{ui.scroll}</span>
-          <span style={{ width: 1, height: 30, background: "oklch(1 0 0 / 0.25)", display: "inline-block", animation: "bnBounce 1.8s ease infinite" }} />
-        </div>
-      </section>
-
-      {/* about */}
-      <section id="about" data-section="about" style={{ padding: "120px 32px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "-15%", left: "-10%", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.75 0.14 150 / 0.14), transparent 70%)", filter: "blur(40px)", pointerEvents: "none", animation: "bnDrift 24s ease-in-out infinite", zIndex: 0 }} />
-        <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
-            <span style={eyebrowNum}>{SECTION_NUM.about}</span>
-            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{p(s.aboutEyebrow, lang)}</h2>
-            <span style={dashedDot("oklch(0.75 0.14 150 / 0.5)")}>
-              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.75 0.14 150)" }} />
-            </span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px,1fr))", gap: 56 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              <p data-reveal style={{ fontSize: 17, lineHeight: 1.7, color: "oklch(0.75 0.012 250)", margin: 0 }}>{p(s.aboutP1, lang)}</p>
-              <p data-reveal style={{ fontSize: 17, lineHeight: 1.7, color: "oklch(0.75 0.012 250)", margin: 0, transitionDelay: "0.1s" }}>{p(s.aboutP2, lang)}</p>
-            </div>
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)", marginBottom: 20 }}>{p(s.timelineTitle, lang)}</div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {timeline.map((tl, i) => (
-                  <div key={i} data-reveal style={{ display: "flex", gap: 16, paddingBottom: 22, position: "relative", transitionDelay: `${i * 90}ms` }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <span style={{ width: 9, height: 9, borderRadius: "50%", background: "oklch(0.75 0.14 150)", flexShrink: 0 }} />
-                      <span style={{ width: 1, flex: 1, background: "oklch(1 0 0 / 0.14)", marginTop: 4 }} />
-                    </div>
-                    <div style={{ paddingBottom: 4 }}>
-                      <div style={{ fontFamily: MONO, fontSize: 11, color: "oklch(0.75 0.14 150)", marginBottom: 4 }}>{tl.year}</div>
-                      <div style={{ fontSize: 15, color: "oklch(0.9 0.005 250)", lineHeight: 1.5 }}>{tl.text}</div>
-                    </div>
-                  </div>
-                ))}
+            <div className="about__grid">
+              <div className="about__text">
+                <p className="lede" data-reveal>{t(s.aboutP1)}</p>
+                <p className="body" data-reveal>{t(s.aboutP2)}</p>
+              </div>
+              <div className="tl" data-reveal>
+                <span className="eyebrow">{t(s.timelineTitle)}</span>
+                <ol>
+                  {timeline.map((x, i) => (
+                    <li key={i}>
+                      <span className="tl__year">{x.year}</span>
+                      <span className="tl__text">{x.text}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* stack */}
-      <section id="stack" data-section="stack" style={{ padding: "120px 32px", background: "oklch(0.13 0.006 250)", borderTop: "1px solid oklch(1 0 0 / 0.06)", borderBottom: "1px solid oklch(1 0 0 / 0.06)", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: 560, height: 560, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.72 0.14 250 / 0.13), transparent 70%)", filter: "blur(44px)", pointerEvents: "none", animation: "bnDrift 28s ease-in-out infinite reverse", zIndex: 0 }} />
-        <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-            <span style={eyebrowNum}>{SECTION_NUM.stack}</span>
-            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{p(s.stackEyebrow, lang)}</h2>
-            <span style={dashedDot("oklch(0.72 0.14 250 / 0.5)")}>
-              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.72 0.14 250)" }} />
-            </span>
-          </div>
-          <p style={{ fontSize: 16, color: "oklch(0.6 0.012 250)", maxWidth: 560, margin: "0 0 56px 46px" }}>{p(s.stackIntro, lang)}</p>
+        {/* ======================================================== stack */}
+        <section className="sec sec--sunk" id="stack">
+          <div className="ed-wrap">
+            <div className="sec__head">
+              <span className="eyebrow"><i>§ {SEC_NUM.stack}</i></span>
+              <div>
+                <h2 className="sec__title" data-reveal>{t(s.stackEyebrow)}</h2>
+                <p className="sec__intro" data-reveal>{t(s.stackIntro)}</p>
+              </div>
+            </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px,1fr))", gap: 20 }}>
-            {content.hubs.map((hub, hi) => (
-              <div key={hub.id} data-reveal style={{ border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 14, padding: 22, background: "oklch(0.16 0.006 250 / 0.6)", transitionDelay: `${hi * 100}ms` }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: hub.color, boxShadow: `0 0 8px ${hub.color}` }} />
-                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em", color: "oklch(0.85 0.005 250)" }}>{p(hub.label, lang)}</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {hub.items.map((it) => {
-                    const level = p(it.level, lang);
-                    const pct = LEVEL_PCT[level] ?? 60;
+            <div className="hubs">
+              {content.hubs.map((h) => (
+                <div className="hub" key={h.id} data-reveal>
+                  <div className="hub__head">
+                    <span className="hub__dot" style={{ background: h.color, boxShadow: `0 0 8px ${h.color}` }} />
+                    <span>{t(h.label)}</span>
+                  </div>
+                  {h.items.map((it) => {
+                    const lv = t(it.level);
                     return (
-                      <div key={it.id} style={{ display: "flex", flexDirection: "column", gap: 6, paddingBottom: 9, borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: 14.5, color: "oklch(0.94 0.003 250)", fontWeight: 500 }}>{it.name}</span>
-                          <span style={{ fontFamily: MONO, fontSize: 10.5, color: "oklch(0.55 0.01 250)", textAlign: "right" }}>{level} · {it.years}</span>
+                      <div className="hub__row" key={it.id}>
+                        <div className="hub__meta">
+                          <span>{it.name}</span>
+                          <span>{lv} · {it.years}</span>
                         </div>
-                        <div style={{ width: "100%", height: 3, borderRadius: 2, background: "oklch(1 0 0 / 0.08)", overflow: "hidden" }}>
-                          <div data-bar data-target={pct} style={{ height: "100%", width: "0%", borderRadius: 2, background: hub.color, transition: "width 1.1s cubic-bezier(0.16,1,0.3,1)" }} />
+                        <div className="hub__bar">
+                          <i style={{ width: `${LEVEL_PCT[lv] ?? 60}%`, background: h.color }} />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 64 }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)", marginBottom: 20 }}>{p(s.credEyebrow, lang)}</div>
-            <div style={{ position: "relative", overflow: "hidden", WebkitMaskImage: "linear-gradient(90deg, transparent, black 6%, black 94%, transparent)", maskImage: "linear-gradient(90deg, transparent, black 6%, black 94%, transparent)" }}>
-              <div className="bn-marquee" style={{ display: "flex", gap: 14, width: "max-content", animation: "bnMarqueeL 32s linear infinite" }}>
-                {[...content.credentials, ...content.credentials].map((c, i) => (
-                  <div key={i} style={{ flex: "0 0 150px", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 10, overflow: "hidden", background: "oklch(0.18 0.007 250)" }}>
-                    <div style={{ aspectRatio: "4/3", overflow: "hidden" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={c.imageUrl} alt={p(c.name, lang)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                    </div>
-                    <div style={{ padding: "8px 10px", fontFamily: MONO, fontSize: 10.5, color: "oklch(0.7 0.012 250)", letterSpacing: "0.03em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p(c.name, lang)}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* work */}
-      <section id="work" data-section="work" style={{ padding: "120px 32px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "10%", left: "50%", width: 600, height: 600, marginLeft: -300, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.78 0.12 200 / 0.1), transparent 70%)", filter: "blur(50px)", pointerEvents: "none", animation: "bnDrift 30s ease-in-out infinite", zIndex: 0 }} />
-        <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-            <span style={eyebrowNum}>{SECTION_NUM.work}</span>
-            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{p(s.workEyebrow, lang)}</h2>
-            <span style={dashedDot("oklch(0.78 0.12 200 / 0.5)")}>
-              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.78 0.12 200)" }} />
-            </span>
-          </div>
-          <p style={{ fontSize: 16, color: "oklch(0.6 0.012 250)", maxWidth: 560, margin: "0 0 56px 46px" }}>{p(s.workIntro, lang)}</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px,1fr))", gap: 22 }}>
-            {content.projects.map((pr, i) => (
-              <div key={pr.id} data-reveal onMouseMove={tiltMove} onMouseLeave={tiltLeave}
-                style={{ border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 16, overflow: "hidden", background: "oklch(0.16 0.006 250 / 0.6)", transition: "border-color 0.25s ease, transform 0.15s ease, box-shadow 0.3s ease, opacity 0.7s ease", transitionDelay: `${i * 80}ms` }}>
-                <div style={{ aspectRatio: "16/10", overflow: "hidden", borderBottom: "1px solid oklch(1 0 0 / 0.08)" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={pr.imageUrl} alt={pr.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                </div>
-                <div style={{ padding: 22 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: "oklch(0.75 0.14 150)", letterSpacing: "0.06em" }}>{pr.code}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: "oklch(0.5 0.01 250)" }}>{p(pr.role, lang)}</span>
-                  </div>
-                  <h3 style={{ fontFamily: SG, fontSize: 20, fontWeight: 600, margin: "0 0 10px 0", color: "oklch(0.97 0.003 250)" }}>{pr.title}</h3>
-                  <p style={{ fontSize: 14, lineHeight: 1.6, color: "oklch(0.65 0.012 250)", margin: "0 0 16px 0" }}>{p(pr.description, lang)}</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 18 }}>
-                    {pr.tech.map((tc) => (
-                      <span key={tc} style={{ fontFamily: MONO, fontSize: 10.5, color: "oklch(0.8 0.005 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 5, padding: "3px 8px" }}>{tc}</span>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", gap: 16, fontFamily: MONO, fontSize: 12 }}>
-                    <a href={pr.githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: "oklch(0.9 0.005 250)" }}>{ui.source} →</a>
-                    {pr.demoUrl && <a href={pr.demoUrl} target="_blank" rel="noopener noreferrer" style={{ color: "oklch(0.75 0.14 150)" }}>{ui.demo} →</a>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* experience */}
-      <section id="experience" data-section="experience" style={{ padding: "120px 32px", background: "oklch(0.13 0.006 250)", borderTop: "1px solid oklch(1 0 0 / 0.06)", borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 56 }}>
-            <span style={eyebrowNum}>{SECTION_NUM.experience}</span>
-            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{p(s.expEyebrow, lang)}</h2>
-            <span style={dashedDot("oklch(0.7 0.16 25 / 0.5)")}>
-              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.7 0.16 25)" }} />
-            </span>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {content.experiences.map((ex, i) => (
-              <div key={ex.id} data-reveal style={{ border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 14, padding: 28, background: "oklch(0.16 0.006 250 / 0.6)", fontFamily: MONO, transitionDelay: `${i * 120}ms` }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ex.logoUrl} alt={ex.company} style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", border: "1px solid oklch(1 0 0 / 0.12)" }} />
-                    <div>
-                      <div style={{ fontFamily: SG, fontSize: 17, fontWeight: 600, color: "oklch(0.97 0.003 250)" }}>{ex.company}</div>
-                      <div style={{ fontSize: 12.5, color: "oklch(0.75 0.14 150)", marginTop: 2 }}>{p(ex.position, lang)}</div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right", fontSize: 11, color: "oklch(0.55 0.01 250)" }}>
-                    <div>{ex.period}</div>
-                    <div>{p(ex.location, lang)}</div>
-                  </div>
-                </div>
-                <p style={{ fontFamily: BODY, fontSize: 14.5, lineHeight: 1.6, color: "oklch(0.68 0.012 250)", margin: "0 0 16px 0" }}>{p(ex.description, lang)}</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {(ex.achievements[lang] ?? ex.achievements.es ?? []).map((ac, j) => (
-                    <div key={j} style={{ display: "flex", gap: 10, fontFamily: BODY, fontSize: 13.5, color: "oklch(0.78 0.01 250)", lineHeight: 1.5 }}>
-                      <span style={{ color: "oklch(0.5 0.01 250)", flexShrink: 0 }}>›</span>
-                      {ac}
-                    </div>
+            <div className="marquee-wrap" data-reveal>
+              <span className="eyebrow">{t(s.credEyebrow)}</span>
+              <div className="marquee">
+                <div className="marquee__track">
+                  {[...content.credentials, ...content.credentials].map((c, i) => (
+                    <figure key={i}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={c.imageUrl} alt={t(c.name)} loading="lazy" decoding="async" />
+                      <figcaption>{t(c.name)}</figcaption>
+                    </figure>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 40, border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 14, padding: "24px 28px", background: "oklch(0.16 0.006 250 / 0.6)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)", marginBottom: 8 }}>{p(s.eduTitle, lang)}</div>
-              <div style={{ fontFamily: SG, fontSize: 17, fontWeight: 600 }}>{p(s.eduDegree, lang)}</div>
-              <div style={{ fontSize: 13.5, color: "oklch(0.65 0.012 250)", marginTop: 3 }}>{s.eduInstitution}</div>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.55 0.01 250)" }}>{p(s.eduPeriod, lang)}</div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* contact */}
-      <section id="contact" data-section="contact" style={{ padding: "140px 32px", textAlign: "center" }}>
-        <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", color: "oklch(0.75 0.14 150)", marginBottom: 20 }}>{p(s.contactEyebrow, lang)}</div>
-          <h2 style={{ fontFamily: SG, fontSize: "clamp(28px,5vw,44px)", fontWeight: 600, margin: "0 0 20px 0" }}>{p(s.contactTitle, lang)}</h2>
-          <p style={{ fontSize: 16, lineHeight: 1.7, color: "oklch(0.68 0.012 250)", margin: "0 0 44px 0" }}>{p(s.contactCopy, lang)}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
-            {content.contactLinks.map((cl) => (
-              <a key={cl.id} href={cl.href} target="_blank" rel="noopener noreferrer" onMouseMove={magnetMove} onMouseLeave={magnetLeave} style={{ fontFamily: MONO, fontSize: 14, color: "oklch(0.9 0.005 250)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 8, padding: "12px 22px", width: "min(340px,100%)", boxSizing: "border-box", textDecoration: "none" }}>
-                {cl.label}
+        {/* ======================================================== work */}
+        <section className="sec" id="work">
+          <div className="ed-wrap">
+            <div className="sec__head">
+              <span className="eyebrow"><i>§ {SEC_NUM.work}</i></span>
+              <div>
+                <h2 className="sec__title" data-reveal>{t(s.workEyebrow)}</h2>
+                <p className="sec__intro" data-reveal>{t(s.workIntro)}</p>
+              </div>
+            </div>
+
+            {feature && (
+              <a
+                className="feature"
+                href={feature.demoUrl || feature.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-reveal
+                onMouseMove={tiltMove}
+                onMouseLeave={tiltLeave}
+              >
+                <div className="feature__img">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={feature.imageUrl} alt={feature.title} loading="lazy" decoding="async" />
+                </div>
+                <div className="feature__body">
+                  <span className="eyebrow">{feature.code} · {t(feature.role)}</span>
+                  <h3>{feature.title}</h3>
+                  <p>{t(feature.description)}</p>
+                  <div className="tags">
+                    {feature.tech.map((x) => <span key={x}>{x}</span>)}
+                  </div>
+                  <span className="feature__cta">{ui.demo} →</span>
+                </div>
               </a>
-            ))}
-          </div>
-        </div>
-      </section>
+            )}
 
-      <footer style={{ padding: "28px 32px", textAlign: "center", borderTop: "1px solid oklch(1 0 0 / 0.06)", fontFamily: MONO, fontSize: 11.5, color: "oklch(0.45 0.01 250)" }}>
-        © {new Date().getFullYear()} {s.heroRealName} — {p(s.footer, lang)}
+            <div className="work__grid">
+              {restProjects.map((pr) => (
+                <article className="proj" key={pr.id} data-reveal onMouseMove={tiltMove} onMouseLeave={tiltLeave}>
+                  <div className="proj__img">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pr.imageUrl} alt={pr.title} loading="lazy" decoding="async" />
+                  </div>
+                  <div className="proj__body">
+                    <span className="eyebrow">{pr.code} · {t(pr.role)}</span>
+                    <h3>{pr.title}</h3>
+                    <p>{t(pr.description)}</p>
+                    <div className="tags">{pr.tech.map((x) => <span key={x}>{x}</span>)}</div>
+                    <div className="proj__links">
+                      <a href={pr.githubUrl} target="_blank" rel="noopener noreferrer">{ui.source} →</a>
+                      {pr.demoUrl && <a href={pr.demoUrl} target="_blank" rel="noopener noreferrer">{ui.demo} →</a>}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ==================================================== experience */}
+        <section className="sec sec--sunk" id="experience">
+          <div className="ed-wrap">
+            <div className="sec__head">
+              <span className="eyebrow"><i>§ {SEC_NUM.experience}</i></span>
+              <h2 className="sec__title" data-reveal>{t(s.expEyebrow)}</h2>
+            </div>
+
+            <div className="xp">
+              {content.experiences.map((ex) => (
+                <article className="xp__item" key={ex.id} data-reveal>
+                  <div className="xp__meta">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ex.logoUrl} alt={ex.company} loading="lazy" decoding="async" />
+                    <div>
+                      <b>{ex.company}</b>
+                      <span>{t(ex.position)}</span>
+                    </div>
+                    <div className="xp__when">
+                      <span>{ex.period}</span>
+                      <span>{t(ex.location)}</span>
+                    </div>
+                  </div>
+                  <p className="xp__desc">{t(ex.description)}</p>
+                  <ul className="xp__notes">
+                    {(ex.achievements[lang] ?? ex.achievements.es ?? []).map((a, i) => (
+                      <li key={i}>{a}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+
+            <div className="edu" data-reveal>
+              <div>
+                <span className="eyebrow">{t(s.eduTitle)}</span>
+                <b>{t(s.eduDegree)}</b>
+                <span>{s.eduInstitution}</span>
+              </div>
+              <span className="edu__when">{t(s.eduPeriod)}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ====================================================== contact */}
+        <section className="sec contact" id="contact">
+          <div className="ed-wrap">
+            <span className="eyebrow" style={{ color: "var(--bn-accent)" }}>{t(s.contactEyebrow)}</span>
+            <h2 className="contact__title" data-reveal>{t(s.contactTitle)}</h2>
+            <p className="contact__copy" data-reveal>{t(s.contactCopy)}</p>
+            <div className="contact__links">
+              {content.contactLinks.map((c) => (
+                <a key={c.id} href={c.href} target="_blank" rel="noopener noreferrer" data-reveal>
+                  {c.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="foot">
+        <div className="ed-wrap">
+          <span>© {now.getFullYear()} {s.heroRealName}</span>
+          <span>{t(s.footer)}</span>
+        </div>
       </footer>
     </div>
   );
 }
+
+/* ================================================================== CSS */
+const CSS = `
+.ed {
+  --serif: var(--bn-serif); --sans: var(--bn-sans); --mono: var(--bn-mono);
+  position: relative;
+  background-color: var(--bn-bg);
+  background-image:
+    radial-gradient(1200px 640px at 82% -6%, rgba(99,215,162,0.10), transparent 60%),
+    radial-gradient(900px 520px at 4% 14%, rgba(231,178,124,0.055), transparent 55%);
+  color: var(--bn-text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+.ed *::selection { background: var(--bn-accent-wash); color: var(--bn-text); }
+.ed :where(h1, h2, h3) { font-family: var(--serif); font-weight: 400; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.ed :where(p) { margin: 0; }
+.ed a { color: inherit; }
+.ed :focus-visible { outline: 2px solid var(--bn-accent); outline-offset: 3px; border-radius: 2px; }
+
+.ed-wrap { max-width: var(--bn-maxw); margin-inline: auto; padding-inline: 24px; position: relative; z-index: 2; }
+
+.eyebrow { font-family: var(--mono); font-size: var(--bn-step--1); letter-spacing: 0.13em; text-transform: uppercase; color: var(--bn-faint); }
+.eyebrow i { color: var(--bn-signal); font-style: normal; }
+
+.lede { font-family: var(--serif); font-size: var(--bn-step-2); line-height: 1.45; color: var(--bn-text); }
+.body { color: var(--bn-dim); margin-top: 16px; max-width: 62ch; }
+
+/* --------------------------------------------------------------- folio */
+.folio {
+  position: fixed; left: 18px; top: 0; bottom: 0; z-index: 40;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--bn-faint);
+}
+.folio__dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bn-accent); box-shadow: 0 0 8px var(--bn-accent); }
+.folio__b { color: var(--bn-dim); }
+.folio__sec { color: var(--bn-signal); }
+.folio__status { color: var(--bn-accent); }
+@media (max-width: 1200px) { .folio { display: none; } }
+
+/* ---------------------------------------------------------------- hero */
+.hero {
+  position: relative; min-height: 82vh; display: flex; align-items: center;
+  padding: 128px 0 72px; border-bottom: 1px solid var(--bn-line); overflow: hidden;
+}
+.hero__obj { position: absolute; inset: 4% -10% 0 60%; z-index: 0; opacity: 0.9; will-change: transform; }
+.hero__glow {
+  position: absolute; inset: 14% 6%; border-radius: 50%;
+  background: radial-gradient(circle at 42% 40%, rgba(99,215,162,0.26), rgba(99,215,162,0.04) 55%, transparent 72%);
+  filter: blur(38px);
+}
+.hero__scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--bn-bg) 14%, rgba(28,29,34,0.7) 46%, transparent 82%),
+    linear-gradient(0deg, var(--bn-bg), transparent 22%);
+}
+.hero__grid { display: grid; grid-template-columns: var(--bn-rail) minmax(0, 1fr); gap: 0 34px; }
+.hero__rail { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--bn-signal); padding-top: 12px; }
+.hero__body { position: relative; z-index: 2; max-width: 560px; will-change: transform; }
+.kicker {
+  display: inline-flex; align-items: center; gap: 9px; white-space: nowrap;
+  font-family: var(--mono); font-size: var(--bn-step--1); letter-spacing: 0.05em;
+  color: var(--bn-accent); border: 1px solid var(--bn-line); border-radius: 999px; padding: 6px 14px; margin-bottom: 30px;
+}
+.kicker__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bn-accent); box-shadow: 0 0 10px var(--bn-accent); }
+.hero__name { font-size: clamp(3rem, 8.5vw, 6.6rem); line-height: 1.0; margin-top: 6px; }
+.hero__role { font-family: var(--mono); font-size: 0.86rem; letter-spacing: 0.04em; color: var(--bn-faint); }
+.hero__lede { font-family: var(--serif); font-size: var(--bn-step-2); line-height: 1.42; color: var(--bn-dim); max-width: 32ch; margin-top: 24px; }
+.hero__meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 34px; font-family: var(--mono); font-size: var(--bn-step--1); color: var(--bn-faint); }
+.hero__meta span::before { content: "· "; color: var(--bn-accent); }
+.hero__scroll { position: absolute; right: 28px; bottom: 24px; z-index: 2; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bn-faint); }
+@media (max-width: 900px) {
+  .hero { min-height: 0; padding: 112px 0 48px; }
+  .hero__obj, .hero__scrim, .hero__scroll { display: none; }
+  .hero__grid { grid-template-columns: 1fr; }
+  .hero__rail { flex-direction: row; gap: 18px; border-top: 0; padding-top: 0; margin-bottom: 22px; }
+  .hero__name { font-size: clamp(2.6rem, 14vw, 3.8rem); }
+  .hero__lede { max-width: none; font-size: var(--bn-step-1); margin-top: 18px; }
+}
+
+/* ------------------------------------------------------------- section */
+.sec { padding: 104px 0; border-bottom: 1px solid var(--bn-line-soft); }
+.sec--sunk { background: var(--bn-bg-sunk); }
+.sec__head { display: grid; grid-template-columns: var(--bn-rail) minmax(0, 1fr); gap: 0 34px; margin-bottom: 46px; align-items: start; }
+.sec__head > .eyebrow { border-top: 1px solid var(--bn-line); padding-top: 12px; }
+.sec__title { font-size: var(--bn-step-3); line-height: 1.08; max-width: 16ch; }
+.sec__intro { margin-top: 16px; color: var(--bn-dim); font-size: var(--bn-step-1); max-width: 48ch; }
+@media (max-width: 900px) {
+  .sec { padding: 72px 0; }
+  .sec__head { grid-template-columns: 1fr; gap: 12px; }
+  .sec__head > .eyebrow { border-top: 0; padding-top: 0; }
+}
+
+/* about */
+.about__grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 56px; }
+.tl { border-left: 1px solid var(--bn-line); padding-left: 26px; }
+.tl ol { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
+.tl li { display: grid; gap: 4px; }
+.tl__year { font-family: var(--mono); font-size: var(--bn-step--1); color: var(--bn-accent); }
+.tl__text { font-size: 0.95rem; color: var(--bn-dim); line-height: 1.5; }
+@media (max-width: 900px) { .about__grid { grid-template-columns: 1fr; gap: 36px; } .tl { border-left: 0; padding-left: 0; } }
+
+/* stack */
+.hubs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; background: var(--bn-line-soft); border: 1px solid var(--bn-line-soft); }
+.hub { background: var(--bn-bg); padding: 22px; }
+.sec--sunk .hub { background: var(--bn-bg-sunk); }
+.hub__head { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; color: var(--bn-text); }
+.hub__dot { width: 8px; height: 8px; border-radius: 50%; }
+.hub__row { padding: 9px 0; border-top: 1px solid var(--bn-line-soft); }
+.hub__meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.hub__meta span:first-child { font-size: 0.92rem; color: var(--bn-text); }
+.hub__meta span:last-child { font-family: var(--mono); font-size: 0.66rem; color: var(--bn-faint); }
+.hub__bar { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.hub__bar i { display: block; height: 100%; border-radius: 2px; }
+
+.marquee-wrap { margin-top: 56px; }
+.marquee { position: relative; overflow: hidden; margin-top: 16px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.marquee__track { display: flex; gap: 14px; width: max-content; animation: bnMq 34s linear infinite; }
+.marquee:hover .marquee__track { animation-play-state: paused; }
+@keyframes bnMq { to { transform: translateX(-50%); } }
+.marquee figure { flex: 0 0 148px; margin: 0; border: 1px solid var(--bn-line); border-radius: 10px; overflow: hidden; background: var(--bn-surface); }
+.marquee img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+.marquee figcaption { padding: 8px 10px; font-family: var(--mono); font-size: 0.64rem; color: var(--bn-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .marquee__track { animation: none; } }
+
+/* work */
+.feature { display: grid; grid-template-columns: 1.15fr 0.85fr; border: 1px solid var(--bn-line); border-radius: 16px; overflow: hidden; background: var(--bn-surface); text-decoration: none; transition: border-color .25s ease, transform .15s ease; }
+.feature:hover { border-color: rgba(99,215,162,0.45); }
+.feature__img { overflow: hidden; border-right: 1px solid var(--bn-line); }
+.feature__img img { display: block; width: 100%; height: 100%; min-height: 260px; object-fit: cover; }
+.feature__body { padding: 30px; display: flex; flex-direction: column; gap: 12px; }
+.feature__body h3 { font-size: var(--bn-step-3); }
+.feature__body p { color: var(--bn-dim); font-size: 0.98rem; }
+.feature__cta { font-family: var(--mono); font-size: 0.8rem; color: var(--bn-accent); margin-top: auto; }
+.work__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; margin-top: 18px; }
+.proj { border: 1px solid var(--bn-line); border-radius: 14px; overflow: hidden; background: var(--bn-surface); transition: border-color .25s ease, transform .15s ease; }
+.proj:hover { border-color: rgba(99,215,162,0.4); }
+.proj__img { aspect-ratio: 16/10; overflow: hidden; border-bottom: 1px solid var(--bn-line); }
+.proj__img img, .feature__img img { transition: transform .5s ease; }
+.proj:hover .proj__img img, .feature:hover .feature__img img { transform: scale(1.05); }
+.proj__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.proj__body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.proj__body h3 { font-size: var(--bn-step-1); }
+.proj__body p { color: var(--bn-dim); font-size: 0.9rem; line-height: 1.55; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags span { font-family: var(--mono); font-size: 0.62rem; color: var(--bn-dim); background: rgba(255,255,255,0.05); border: 1px solid var(--bn-line); border-radius: 5px; padding: 3px 7px; }
+.proj__links { display: flex; gap: 14px; font-family: var(--mono); font-size: 0.72rem; margin-top: 2px; }
+.proj__links a:last-child { color: var(--bn-accent); }
+@media (max-width: 760px) { .feature { grid-template-columns: 1fr; } .feature__img { border-right: 0; border-bottom: 1px solid var(--bn-line); } .feature__img img { min-height: 200px; } }
+
+/* experience */
+.xp { display: flex; flex-direction: column; gap: 18px; }
+.xp__item { border: 1px solid var(--bn-line); border-radius: 14px; padding: 26px; background: var(--bn-bg); }
+.sec--sunk .xp__item { background: var(--bn-bg); }
+.xp__meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.xp__meta img { width: 40px; height: 40px; border-radius: 9px; object-fit: cover; border: 1px solid var(--bn-line); }
+.xp__meta b { font-family: var(--serif); font-size: var(--bn-step-1); font-weight: 400; display: block; }
+.xp__meta > div:nth-child(2) span { font-family: var(--mono); font-size: 0.74rem; color: var(--bn-accent); }
+.xp__when { margin-left: auto; text-align: right; font-family: var(--mono); font-size: 0.66rem; color: var(--bn-faint); }
+.xp__when span { display: block; }
+.xp__desc { color: var(--bn-dim); font-size: 0.96rem; line-height: 1.6; margin-bottom: 14px; max-width: 74ch; }
+.xp__notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.xp__notes li { font-family: var(--mono); font-size: 0.78rem; color: var(--bn-dim); line-height: 1.5; padding-left: 16px; position: relative; }
+.xp__notes li::before { content: "›"; position: absolute; left: 0; color: var(--bn-faint); }
+.edu { margin-top: 28px; border: 1px solid var(--bn-line); border-radius: 14px; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: var(--bn-bg); }
+.edu b { font-family: var(--serif); font-size: var(--bn-step-1); font-weight: 400; display: block; margin: 6px 0 2px; }
+.edu > div span:last-child { color: var(--bn-dim); font-size: 0.9rem; }
+.edu__when { font-family: var(--mono); font-size: 0.72rem; color: var(--bn-faint); }
+@media (max-width: 760px) { .xp__when { margin-left: 0; text-align: left; } }
+
+/* contact */
+.contact { text-align: center; }
+.contact .ed-wrap { max-width: 680px; }
+.contact__title { font-size: clamp(2rem, 5vw, 3.2rem); margin: 16px 0; }
+.contact__copy { color: var(--bn-dim); font-size: var(--bn-step-1); line-height: 1.7; margin-bottom: 38px; }
+.contact__links { display: flex; flex-direction: column; gap: 11px; align-items: center; }
+.contact__links a { font-family: var(--mono); font-size: 0.9rem; color: var(--bn-dim); border: 1px solid var(--bn-line); border-radius: 8px; padding: 12px 22px; width: min(360px, 100%); text-decoration: none; transition: border-color .2s ease, color .2s ease; }
+.contact__links a:hover { border-color: var(--bn-accent); color: var(--bn-accent); }
+
+/* footer */
+.foot { padding: 40px 0 64px; }
+.foot .ed-wrap { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.72rem; color: var(--bn-faint); flex-wrap: wrap; gap: 8px; }
+`;
