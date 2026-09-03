@@ -1,24 +1,24 @@
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
-import Link from "next/link"
-import { getPortfolioData } from "@/lib/data"
-import ProjectList from "@/components/admin/project-list"
+import { prisma } from "@/lib/prisma";
+import ProjectsEditor from "@/components/admin/projects-editor";
 
-export default async function ProjectsPage() {
-  const data = await getPortfolioData()
+export const dynamic = "force-dynamic";
+const L = (v: unknown) => { const o = (v ?? {}) as { es?: string; en?: string }; return { es: o.es ?? "", en: o.en ?? "" }; };
 
+export default async function Page() {
+  const rows = await prisma.project.findMany({ orderBy: { sortOrder: "asc" } });
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Projects</h1>
-        <Button asChild>
-          <Link href="/admin/projects/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Project
-          </Link>
-        </Button>
-      </div>
-      <ProjectList projects={data.projects} />
-    </div>
-  )
+    <ProjectsEditor
+      initial={rows.map((r) => ({
+        id: r.id,
+        code: r.code,
+        title: r.title,
+        role: L(r.role),
+        description: L(r.description),
+        tech: r.tech,
+        githubUrl: r.githubUrl,
+        demoUrl: r.demoUrl ?? "",
+        imageUrl: r.imageUrl,
+      }))}
+    />
+  );
 }

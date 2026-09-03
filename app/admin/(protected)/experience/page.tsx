@@ -1,24 +1,24 @@
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
-import Link from "next/link"
-import { getPortfolioData } from "@/lib/data"
-import ExperienceList from "@/components/admin/experience-list"
+import { prisma } from "@/lib/prisma";
+import ExperienceEditor from "@/components/admin/experience-editor";
 
-export default async function ExperiencePage() {
-  const data = await getPortfolioData()
+export const dynamic = "force-dynamic";
+const L = (v: unknown) => { const o = (v ?? {}) as { es?: string; en?: string }; return { es: o.es ?? "", en: o.en ?? "" }; };
+const LL = (v: unknown) => { const o = (v ?? {}) as { es?: string[]; en?: string[] }; return { es: o.es ?? [], en: o.en ?? [] }; };
 
+export default async function Page() {
+  const rows = await prisma.experience.findMany({ orderBy: { sortOrder: "asc" } });
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Work Experience</h1>
-        <Button asChild>
-          <Link href="/admin/experience/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Experience
-          </Link>
-        </Button>
-      </div>
-      <ExperienceList experiences={data.experience} />
-    </div>
-  )
+    <ExperienceEditor
+      initial={rows.map((r) => ({
+        id: r.id,
+        company: r.company,
+        logoUrl: r.logoUrl,
+        position: L(r.position),
+        period: r.period,
+        location: L(r.location),
+        description: L(r.description),
+        achievements: LL(r.achievements),
+      }))}
+    />
+  );
 }

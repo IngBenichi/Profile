@@ -1,90 +1,74 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { getPortfolioData } from "@/lib/data"
-import { Layers, Users, Briefcase, GraduationCap, MessageSquareQuote, Mail } from "lucide-react"
-import Link from "next/link"
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { MONO, SG } from "@/components/admin/kit";
 
-export default async function DashboardPage() {
-  const data = await getPortfolioData()
+export const dynamic = "force-dynamic";
 
-  const sections = [
-    {
-      title: "Profile",
-      description: "Update your personal information and profile picture",
-      icon: <Users className="h-8 w-8 text-primary" />,
-      link: "/admin/profile",
-      count: 1,
-    },
-    {
-      title: "Skills",
-      description: "Manage your technical skills and expertise",
-      icon: <Layers className="h-8 w-8 text-primary" />,
-      link: "/admin/skills",
-      count: Object.keys(data.skills).length,
-    },
-    {
-      title: "Projects",
-      description: "Add, edit or remove your portfolio projects",
-      icon: <Layers className="h-8 w-8 text-primary" />,
-      link: "/admin/projects",
-      count: data.projects.length,
-    },
-    {
-      title: "Experience",
-      description: "Update your work experience history",
-      icon: <Briefcase className="h-8 w-8 text-primary" />,
-      link: "/admin/experience",
-      count: data.experience.length,
-    },
-    {
-      title: "Education",
-      description: "Manage your educational background",
-      icon: <GraduationCap className="h-8 w-8 text-primary" />,
-      link: "/admin/education",
-      count: data.education.length,
-    },
-    {
-      title: "Testimonials",
-      description: "Add or edit testimonials from colleagues and clients",
-      icon: <MessageSquareQuote className="h-8 w-8 text-primary" />,
-      link: "/admin/testimonials",
-      count: data.testimonials.length,
-    },
-    {
-      title: "Contact",
-      description: "Update your contact information",
-      icon: <Mail className="h-8 w-8 text-primary" />,
-      link: "/admin/contact",
-      count: 1,
-    },
-  ]
+export default async function Dashboard() {
+  const [projects, experiences, hubs, credentials, timeline, links, assets] = await Promise.all([
+    prisma.project.count(),
+    prisma.experience.count(),
+    prisma.skillHub.count(),
+    prisma.credential.count(),
+    prisma.timelineItem.count(),
+    prisma.contactLink.count(),
+    prisma.asset.count(),
+  ]);
+
+  const cards = [
+    { label: "Proyectos", n: projects, href: "/admin/projects" },
+    { label: "Experiencia", n: experiences, href: "/admin/experience" },
+    { label: "Grupos de skills", n: hubs, href: "/admin/skills" },
+    { label: "Credenciales", n: credentials, href: "/admin/credentials" },
+    { label: "Línea de tiempo", n: timeline, href: "/admin/timeline" },
+    { label: "Enlaces de contacto", n: links, href: "/admin/contact-links" },
+    { label: "Imágenes subidas", n: assets, href: "/admin/projects" },
+  ];
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-      <p className="text-muted-foreground mb-8">
-        Welcome to your portfolio admin panel. Use the sections below to update your portfolio content.
+      <h1 style={{ fontFamily: SG, fontSize: 26, fontWeight: 700, margin: "0 0 6px" }}>Panel</h1>
+      <p style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.55 0.01 250)", margin: "0 0 28px" }}>
+        Todo lo que edites aquí se refleja al instante en benichi.dev
       </p>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sections.map((section) => (
-          <Link href={section.link} key={section.title}>
-            <Card className="h-full cursor-pointer hover:shadow-md transition-shadow border-border/40">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xl">{section.title}</CardTitle>
-                <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary">
-                  {section.count}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-full bg-primary/10">{section.icon}</div>
-                  <CardDescription className="flex-1">{section.description}</CardDescription>
-                </div>
-              </CardContent>
-            </Card>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
+        {cards.map((c) => (
+          <Link
+            key={c.label}
+            href={c.href}
+            style={{
+              textDecoration: "none",
+              border: "1px solid oklch(1 0 0 / 0.1)",
+              borderRadius: 12,
+              background: "oklch(0.16 0.006 250 / 0.6)",
+              padding: "18px 16px",
+              color: "inherit",
+            }}
+          >
+            <div style={{ fontFamily: SG, fontSize: 28, fontWeight: 700, color: "oklch(0.75 0.14 150)" }}>{c.n}</div>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: "oklch(0.6 0.012 250)", marginTop: 4 }}>{c.label}</div>
           </Link>
         ))}
       </div>
+
+      <div style={{ marginTop: 28 }}>
+        <Link
+          href="/admin/site"
+          style={{
+            fontFamily: MONO,
+            fontSize: 12,
+            color: "oklch(0.9 0.005 250)",
+            textDecoration: "none",
+            border: "1px solid oklch(1 0 0 / 0.14)",
+            borderRadius: 8,
+            padding: "10px 16px",
+            display: "inline-block",
+          }}
+        >
+          › Editar textos del sitio (hero, sobre mí, contacto…)
+        </Link>
+      </div>
     </div>
-  )
+  );
 }

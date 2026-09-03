@@ -1,0 +1,117 @@
+// Portfolio content store for benichi.dev.
+// Every localized text field is a JSON object { es: string, en: string }.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Singleton (id = 1). All the free-text "copy" on the landing page.
+model SiteContent {
+  id             Int      @id @default(1)
+  heroName       String   @default("BENICHI")
+  heroRealName   String   @default("Camilo Benítez")
+  heroBadge      Json
+  heroTitle      Json
+  heroCopy       Json
+  aboutEyebrow   Json
+  aboutP1        Json
+  aboutP2        Json
+  timelineTitle  Json
+  stackEyebrow   Json
+  stackIntro     Json
+  credEyebrow    Json
+  workEyebrow    Json
+  workIntro      Json
+  expEyebrow     Json
+  eduTitle       Json
+  eduDegree      Json
+  eduInstitution String   @default("Universidad de la Costa (CUC)")
+  eduPeriod      Json
+  contactEyebrow Json
+  contactTitle   Json
+  contactCopy    Json
+  footer         Json
+  updatedAt      DateTime @updatedAt
+}
+
+model TimelineItem {
+  id        Int    @id @default(autoincrement())
+  year      String
+  text      Json
+  sortOrder Int    @default(0)
+}
+
+model SkillHub {
+  id        Int         @id @default(autoincrement())
+  slug      String      @unique
+  label     Json
+  color     String
+  sortOrder Int         @default(0)
+  items     SkillItem[]
+}
+
+model SkillItem {
+  id        Int      @id @default(autoincrement())
+  hub       SkillHub @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  hubId     Int
+  name      String
+  years     String
+  level     Json
+  sortOrder Int      @default(0)
+}
+
+model Credential {
+  id        Int    @id @default(autoincrement())
+  name      Json
+  imageUrl  String
+  sortOrder Int    @default(0)
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  code        String
+  title       String
+  role        Json
+  description Json
+  tech        String[]
+  githubUrl   String
+  demoUrl     String?
+  imageUrl    String
+  sortOrder   Int      @default(0)
+}
+
+model Experience {
+  id           Int    @id @default(autoincrement())
+  company      String
+  logoUrl      String
+  position     Json
+  period       String
+  location     Json
+  description  Json
+  achievements Json // { es: string[], en: string[] }
+  sortOrder    Int    @default(0)
+}
+
+model ContactLink {
+  id        Int    @id @default(autoincrement())
+  label     String
+  href      String
+  sortOrder Int    @default(0)
+}
+
+/// An image uploaded through the admin panel. Bytes live on the uploads volume;
+/// this row is metadata + the public URL (/uploads/<filename>).
+model Asset {
+  id        String   @id @default(cuid())
+  filename  String   @unique
+  url       String
+  mime      String
+  bytes     Int
+  createdAt DateTime @default(now())
+}

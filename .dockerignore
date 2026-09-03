@@ -6,7 +6,6 @@ build
 npm-debug.log*
 .env*
 deploy
-Dockerfile
-.dockerignore
+data
 *.md
 pnpm-lock.yaml

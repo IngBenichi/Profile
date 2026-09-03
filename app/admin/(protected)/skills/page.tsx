@@ -1,13 +1,23 @@
-import SkillsForm from "@/components/admin/skills-form"
-import { getPortfolioData } from "@/lib/data"
+import { prisma } from "@/lib/prisma";
+import SkillsEditor from "@/components/admin/skills-editor";
 
-export default async function SkillsPage() {
-  const data = await getPortfolioData()
+export const dynamic = "force-dynamic";
+const L = (v: unknown) => { const o = (v ?? {}) as { es?: string; en?: string }; return { es: o.es ?? "", en: o.en ?? "" }; };
 
+export default async function Page() {
+  const hubs = await prisma.skillHub.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: { items: { orderBy: { sortOrder: "asc" } } },
+  });
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8">Edit Skills</h1>
-      <SkillsForm skills={data.skills} />
-    </div>
-  )
+    <SkillsEditor
+      initial={hubs.map((h) => ({
+        id: h.id,
+        slug: h.slug,
+        color: h.color,
+        label: L(h.label),
+        items: h.items.map((it) => ({ id: it.id, hubId: h.id, name: it.name, years: it.years, level: L(it.level) })),
+      }))}
+    />
+  );
 }

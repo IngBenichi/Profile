@@ -1,31 +1,53 @@
 name: benichi-portfolio
 
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: benichi
+      POSTGRES_DB: benichi
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benichi -d benichi"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   app:
     build:
       context: ..
       dockerfile: Dockerfile
     image: benichi-portfolio:latest
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
+      UPLOAD_DIR: /app/data/uploads
+      DATABASE_URL: postgresql://benichi:${POSTGRES_PASSWORD}@db:5432/benichi?schema=public
     volumes:
-      # Persist admin-editable content (data/portfolio.json) across rebuilds.
-      - portfolio-data:/app/data
+      # Uploaded images (shared read-only with nginx for /uploads/*).
+      - uploads:/app/data/uploads
     expose:
       - "3000"
     networks:
       - web
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/portfolio').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 40s
 
   nginx:
     image: nginx:1.27-alpine
@@ -45,6 +67,7 @@ services:
       - ./nginx/htpasswd:/etc/nginx/htpasswd:ro
       - certbot-www:/var/www/certbot
       - certbot-conf:/etc/letsencrypt
+      - uploads:/srv/uploads:ro
     networks:
       - web
 
@@ -54,14 +77,14 @@ services:
     volumes:
       - certbot-www:/var/www/certbot
       - certbot-conf:/etc/letsencrypt
-    # Attempt renewal twice a day; nginx picks up new certs on reload (see deploy.sh).
     entrypoint: >
       /bin/sh -c 'trap exit TERM;
       while :; do certbot renew --webroot -w /var/www/certbot --quiet;
       sleep 12h & wait $${!}; done'
 
 volumes:
-  portfolio-data:
+  pgdata:
+  uploads:
   certbot-www:
   certbot-conf:
 
