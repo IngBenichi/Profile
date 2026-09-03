@@ -1,1559 +1,796 @@
 "use client";
-import { Roboto_Slab } from "next/font/google";
 
-import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Github,
-  Mail,
-  Linkedin,
-  Download,
-  ChevronRight,
-  MoveRight,
-} from "lucide-react";
-import ProjectCard from "@/components/project-card";
-import ExperienceCard from "@/components/experience-card";
-import TestimonialCard from "@/components/testimonial-card";
-import ContactForm from "@/components/contact-form";
-import ThemeToggle from "@/components/theme-toggle";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import ViewAllProjectsButton from "@/components/view-all-projects-button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import type { OrbitNodeKey } from "@/components/hero-orbit";
 
-const DynamicGalaxyScene = dynamic(() => import("@/components/galaxy-canvas"), {
-  ssr: false,
-});
+const HeroOrbit = dynamic(() => import("@/components/hero-orbit"), { ssr: false });
 
-const robotoSlab = Roboto_Slab({ subsets: ["latin"], weight: ["400", "700"] });
+/* ------------------------------------------------------------------ fonts */
+const SG = "var(--font-space-grotesk), 'Space Grotesk', sans-serif";
+const MONO = "var(--font-jetbrains-mono), 'JetBrains Mono', monospace";
+const BODY = "var(--font-inter), 'Inter', sans-serif";
 
+/* ------------------------------------------------------------------- data */
+type Lang = "es" | "en";
+type Localized = { es: string; en: string };
+const L = (v: string | Localized, lang: Lang) => (typeof v === "string" ? v : v[lang]);
+
+const DATA = {
+  timeline: [
+    { year: "2023", es: "Inicia Ingeniería de Sistemas — Universidad de la Costa (CUC)", en: "Starts Systems Engineering — Universidad de la Costa (CUC)" },
+    { year: "2024", es: "Cofunda ARC4M como Software Engineer", en: "Co-founds ARC4M as Software Engineer" },
+    { year: "2024", es: "Backend Developer Junior en Domotes S.A.S.", en: "Backend Developer Junior at Domotes S.A.S." },
+    { year: "2024–26", es: "Certificaciones en Django, Docker, FastAPI, Laravel, DevOps, IA, OAuth, OWASP", en: "Certifications in Django, Docker, FastAPI, Laravel, DevOps, AI, OAuth, OWASP" },
+    { year: "NOW", es: "Construyendo sistemas backend reales", en: "Building real backend systems" },
+  ],
+  hubs: [
+    { key: "lang", color: "oklch(0.75 0.14 150)", label: { es: "LENGUAJES", en: "LANGUAGES" }, items: [
+      { name: "Python", years: "5+", level: { es: "Avanzado", en: "Advanced" } },
+      { name: "JavaScript", years: "3+", level: { es: "Intermedio", en: "Intermediate" } },
+      { name: "PHP", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+    ] },
+    { key: "fw", color: "oklch(0.74 0.14 300)", label: { es: "FRAMEWORKS", en: "FRAMEWORKS" }, items: [
+      { name: "Node.js", years: "4+", level: { es: "Avanzado", en: "Advanced" } },
+      { name: "Express", years: "4+", level: { es: "Avanzado", en: "Advanced" } },
+      { name: "Django", years: "3+", level: { es: "Avanzado", en: "Advanced" } },
+      { name: "Flask", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+      { name: "FastAPI", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+      { name: "Laravel", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+    ] },
+    { key: "db", color: "oklch(0.78 0.12 200)", label: { es: "BASES DE DATOS", en: "DATABASES" }, items: [
+      { name: "PostgreSQL", years: "3+", level: { es: "Avanzado", en: "Advanced" } },
+      { name: "MySQL", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+      { name: "SQLite", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+    ] },
+    { key: "tools", color: "oklch(0.72 0.14 250)", label: { es: "HERRAMIENTAS", en: "TOOLS" }, items: [
+      { name: "Docker", years: "3+", level: { es: "Avanzado", en: "Advanced" } },
+      { name: "Azure DevOps", years: "2+", level: { es: "Intermedio", en: "Intermediate" } },
+      { name: "AWS", years: "1", level: { es: "Básico", en: "Basic" } },
+      { name: "Git", years: "5+", level: { es: "Avanzado", en: "Advanced" } },
+    ] },
+  ],
+  credentials: [
+    { img: "/django.png", name: "Django" },
+    { img: "/django_rest.png", name: "Django REST" },
+    { img: "/laravel.png", name: "Laravel" },
+    { img: "/laravel_rest.png", name: "Laravel REST" },
+    { img: "/docker.png", name: "Docker" },
+    { img: "/fastapi.png", name: "FastAPI" },
+    { img: "/devops.png", name: "DevOps" },
+    { img: "/ia.png", name: { es: "Inteligencia Artificial", en: "Artificial Intelligence" } },
+    { img: "/oauth.png", name: "OAuth" },
+    { img: "/owasp.png", name: "OWASP" },
+  ] as { img: string; name: string | Localized }[],
+  projects: [
+    { code: "SYS-01", title: "Benichi's Blog", role: { es: "Desarrollador Backend Líder", en: "Lead Backend Developer" }, desc: { es: "Plataforma de blog personal enfocada en rendimiento y SEO, usando renderizado del lado del servidor y generación de sitios estáticos.", en: "Personal blog platform focused on performance and SEO, using server-side rendering and static site generation." }, tech: ["Django", "PostgreSQL", "Google Cloud", "Docker"], github: "https://github.com/IngBenichi/Blog-Benichi", demo: "https://my-blog-app-django.onrender.com/", image: "/blog.png" },
+    { code: "SYS-02", title: "YTMediaConverter", role: { es: "Ingeniero Backend", en: "Backend Engineer" }, desc: { es: "Aplicación para descargar y convertir videos de YouTube en MP3 o MP4, con interfaz gráfica intuitiva y barra de progreso en tiempo real.", en: "App to download and convert YouTube videos to MP3 or MP4, with an intuitive GUI and real-time progress bar." }, tech: ["Python"], github: "https://github.com/IngBenichi/YTMediaConverter", demo: null as string | null, image: "/yt.JPG" },
+    { code: "SYS-03", title: "Crypto Dashboard", role: { es: "Desarrollador Frontend", en: "Frontend Developer" }, desc: { es: "Dashboard interactivo para visualizar datos de criptomonedas en tiempo real con gráficos y estadísticas detalladas.", en: "Interactive dashboard for real-time cryptocurrency data with charts and detailed stats." }, tech: ["React", "Next.js", "TypeScript", "Tailwind CSS"], github: "https://github.com/IngBenichi/crypto-dashboard", demo: "https://v0-crypto-dashboard-mu-tawny.vercel.app/", image: "/crypto.png" },
+    { code: "SYS-04", title: "Auction Product Page", role: { es: "Desarrollador Frontend", en: "Frontend Developer" }, desc: { es: "Página de producto de subasta con diseño moderno y funcionalidades interactivas para una experiencia de usuario optimizada.", en: "Auction product page with modern design and interactive features for an optimized user experience." }, tech: ["React", "Next.js", "TypeScript", "Tailwind CSS"], github: "https://github.com/IngBenichi/auction-product-page", demo: "https://v0-auction-product-page.vercel.app/", image: "/auction.png" },
+    { code: "SYS-05", title: "Benichi Dev Studio", role: { es: "Desarrollador Frontend", en: "Frontend Developer" }, desc: { es: "Landing page profesional para estudio de desarrollo, con diseño moderno y secciones informativas sobre servicios y proyectos.", en: "Professional landing page for a dev studio, with modern design and informative service/project sections." }, tech: ["React", "Next.js", "TypeScript", "Tailwind CSS"], github: "https://github.com/IngBenichi/benichi-dev-studio-landing-page", demo: "https://v0-benichi-dev-studio-landing-page.vercel.app/", image: "/benichi-dev.png" },
+    { code: "SYS-06", title: "Battle Zone Landing", role: { es: "Desarrollador Frontend", en: "Frontend Developer" }, desc: { es: "Landing page temática para zona de batalla, con diseño impactante y elementos visuales dinámicos.", en: "Themed battle-zone landing page with bold design and dynamic visual elements." }, tech: ["React", "Next.js", "TypeScript", "Tailwind CSS"], github: "https://github.com/IngBenichi/battle-zone-landing-page", demo: "https://v0-battle-zone-landing-page.vercel.app/", image: "/battle.png" },
+  ],
+  experiences: [
+    { company: "Domotes S.A.S", logo: "/domotes_ltda_logo.jpeg", position: { es: "Backend Developer Junior", en: "Backend Developer Junior" }, period: "Dec 2024 — Present", location: { es: "Barranquilla, Colombia · Presencial", en: "Barranquilla, Colombia · On-site" }, desc: { es: "Desarrollo y mantengo sistemas backend escalables utilizando Laravel y microservicios basados en Python, siguiendo buenas prácticas y patrones arquitectónicos para asegurar mantenibilidad y rendimiento.", en: "I develop and maintain scalable backend systems using Laravel and Python-based microservices, following best practices and architectural patterns for maintainability and performance." }, achievements: { es: [
+      "Desarrollé y mantuve sistemas backend escalables usando Laravel y microservicios en Python",
+      "Construí y gestioné pipelines de CI/CD aprovechando Microsoft Azure",
+      "Trabajé con contenedores Docker para crear entornos consistentes y optimizar despliegues",
+      "Administré y optimicé bases de datos, asegurando alto rendimiento y confiabilidad",
+      "Diseñé e implementé APIs RESTful siguiendo las mejores prácticas",
+      "Contribuí a mantener una arquitectura de sistema robusta, escalable y de alta calidad",
+    ], en: [
+      "Developed and maintained scalable backend systems using Laravel and Python microservices",
+      "Built and managed CI/CD pipelines leveraging Microsoft Azure",
+      "Worked with Docker containers to create consistent environments and optimize deployments",
+      "Managed and optimized databases, ensuring high performance and reliability",
+      "Designed and implemented RESTful APIs following best practices",
+      "Contributed to maintaining a robust, scalable, high-quality system architecture",
+    ] } },
+    { company: "ARC4M", logo: "/arc4m_logo.jpeg", position: { es: "Co-Fundador & Software Engineer", en: "Co-Founder & Software Engineer" }, period: "Jan 2024 — Present", location: { es: "Barranquilla, Colombia · Remoto", en: "Barranquilla, Colombia · Remote" }, desc: { es: "Como cofundador y software engineer, lidero el desarrollo de soluciones tecnológicas, participando en decisiones estratégicas y en la implementación de arquitecturas robustas para nuestros productos.", en: "As co-founder and software engineer, I lead the development of technology solutions, taking part in strategic decisions and implementing robust architectures for our products." }, achievements: { es: [
+      "Cofundé la empresa y participé en la definición de la visión tecnológica",
+      "Diseñé e implementé arquitecturas escalables para productos SaaS",
+      "Lideré equipos de desarrollo en proyectos de software a medida",
+      "Implementé prácticas de DevOps y despliegue continuo",
+      "Colaboré con clientes para entender y resolver necesidades técnicas complejas",
+    ], en: [
+      "Co-founded the company and helped shape its technology vision",
+      "Designed and implemented scalable architectures for SaaS products",
+      "Led development teams on custom software projects",
+      "Implemented DevOps practices and continuous deployment",
+      "Collaborated with clients to understand and solve complex technical needs",
+    ] } },
+  ],
+};
+
+const I18N = {
+  es: {
+    nav: { home: "INDEX", about: "SOBRE MÍ", stack: "STACK", work: "TRABAJO", experience: "EXPERIENCIA", contact: "CONTACTO" },
+    heroBadge: "Disponible para nuevas oportunidades",
+    heroTitle: "Ingeniero de Software Backend",
+    heroCopy: "Estudiante de Ingeniería de Sistemas construyendo APIs, microservicios e infraestructura — con la mira puesta en IA, cloud y ciberseguridad.",
+    ctaWork: "Ver trabajo", ctaContact: "Contactar", scroll: "SCROLL",
+    systemPanelTitle: "BENICHI://SYSTEM", systemStatus: "ONLINE",
+    domains: { backend: "Backend", cloud: "Cloud", devops: "DevOps", security: "Seguridad", ai: "IA", apis: "APIs" },
+    aboutNum: "01", aboutEyebrow: "Sobre mí",
+    aboutP1: "Soy Ingeniero de Software Backend con una profunda pasión por resolver problemas complejos a través de APIs robustas, arquitecturas de microservicios y soluciones escalables en la nube.",
+    aboutP2: "Aprendo constantemente — proyectos open-source, hackathons, equipos multidisciplinarios. Hoy me enfoco en construir sistemas backend reales, y en llevarlos hacia IA, cloud y ciberseguridad.",
+    timelineTitle: "LÍNEA DE TIEMPO",
+    stackNum: "02", stackEyebrow: "Stack tecnológico",
+    stackIntro: "Backend moderno, bases de datos relacionales y herramientas DevOps — el sistema con el que construyo.",
+    credEyebrow: "CREDENCIALES",
+    workNum: "03", workEyebrow: "Proyectos", workIntro: "Seis sistemas reales que he construido y desplegado.",
+    source: "Código", demo: "Demo",
+    expNum: "04", expEyebrow: "Experiencia",
+    eduTitle: "EDUCACIÓN", eduDegree: "Ingeniería en Sistemas", eduInst: "Universidad de la Costa (CUC)", eduPeriod: "Feb 2023 – Dic 2027 · En curso",
+    contactEyebrow: "SYSTEM READY", contactTitle: "¿Tienes un proyecto en mente?",
+    contactCopy: "Actualmente estoy abierto a nuevas oportunidades donde pueda aportar valor construyendo sistemas backend robustos. Si buscas a alguien comprometido y orientado a resultados, ¡hablemos!",
+    footer: "Ingeniero de Software Backend",
+    boot: ["INICIANDO SISTEMA BENICHI...", "CARGANDO NÚCLEO...", "CARGANDO RED...", "CARGANDO IA...", "CARGANDO PROYECTOS...", "SISTEMA EN LÍNEA"],
+    skip: "CLIC PARA SALTAR",
+  },
+  en: {
+    nav: { home: "INDEX", about: "ABOUT", stack: "STACK", work: "WORK", experience: "EXPERIENCE", contact: "CONTACT" },
+    heroBadge: "Open to new opportunities",
+    heroTitle: "Backend Software Engineer",
+    heroCopy: "Systems Engineering student building APIs, microservices and infrastructure — with sights set on AI, cloud and cybersecurity.",
+    ctaWork: "View work", ctaContact: "Get in touch", scroll: "SCROLL",
+    systemPanelTitle: "BENICHI://SYSTEM", systemStatus: "ONLINE",
+    domains: { backend: "Backend", cloud: "Cloud", devops: "DevOps", security: "Security", ai: "AI", apis: "APIs" },
+    aboutNum: "01", aboutEyebrow: "About me",
+    aboutP1: "I'm a Backend Software Engineer with a deep passion for solving complex problems through robust APIs, microservices architectures and scalable cloud solutions.",
+    aboutP2: "I learn constantly — open-source projects, hackathons, cross-functional teams. Today I'm focused on building real backend systems, and pushing further into AI, cloud and cybersecurity.",
+    timelineTitle: "TIMELINE",
+    stackNum: "02", stackEyebrow: "Technology stack",
+    stackIntro: "Modern backend, relational databases and DevOps tooling — the system I build with.",
+    credEyebrow: "CREDENTIALS",
+    workNum: "03", workEyebrow: "Work", workIntro: "Six real systems I've built and shipped.",
+    source: "Source", demo: "Live demo",
+    expNum: "04", expEyebrow: "Experience",
+    eduTitle: "EDUCATION", eduDegree: "Systems Engineering", eduInst: "Universidad de la Costa (CUC)", eduPeriod: "Feb 2023 – Dec 2027 · In progress",
+    contactEyebrow: "SYSTEM READY", contactTitle: "Have a project in mind?",
+    contactCopy: "I'm currently open to new opportunities where I can add value building robust backend systems. If you're looking for someone committed and results-driven, let's talk!",
+    footer: "Backend Software Engineer",
+    boot: ["INITIALIZING BENICHI SYSTEM...", "LOADING CORE...", "LOADING NETWORK...", "LOADING AI...", "LOADING PROJECTS...", "SYSTEM ONLINE"],
+    skip: "CLICK TO SKIP",
+  },
+} as const;
+
+const DOMAIN_DEFS: { key: OrbitNodeKey; color: string }[] = [
+  { key: "backend", color: "oklch(0.75 0.14 150)" },
+  { key: "cloud", color: "oklch(0.72 0.14 250)" },
+  { key: "devops", color: "oklch(0.78 0.12 200)" },
+  { key: "security", color: "oklch(0.7 0.16 25)" },
+  { key: "ai", color: "oklch(0.74 0.14 300)" },
+  { key: "apis", color: "oklch(0.85 0.006 250)" },
+];
+
+const LEVEL_PCT: Record<string, number> = {
+  "Básico": 35, Basic: 35, Intermedio: 65, Intermediate: 65, Avanzado: 90, Advanced: 90,
+};
+
+const NAV_ORDER = ["home", "about", "stack", "work", "experience", "contact"] as const;
+
+const CONTACT_LINKS = [
+  { cmd: "$ open mailto:djangobenichi@gmail.com", href: "mailto:djangobenichi@gmail.com" },
+  { cmd: "$ open github.com/IngBenichi", href: "https://github.com/IngBenichi" },
+  { cmd: "$ open linkedin.com/in/benichidev", href: "https://www.linkedin.com/in/benichidev" },
+];
+
+const BASE_CSS = `
+@keyframes bnBoot { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bnPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@keyframes bnBounce { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(8px); opacity: 1; } }
+@keyframes bnSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes bnMarqueeL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes bnDrift { 0%, 100% { transform: translate(-8%,-8%) scale(1); } 50% { transform: translate(6%,8%) scale(1.18); } }
+.bn-root [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.bn-root ::selection { background: oklch(0.75 0.14 150 / 0.35); color: oklch(0.98 0 0); }
+.bn-marquee:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .bn-root *, .bn-root *::before, .bn-root *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+`;
+
+/* ------------------------------------------------------------- component */
 export default function Home() {
+  const [lang, setLang] = useState<Lang>("es");
+  const [booted, setBooted] = useState(false);
+  const [bootRendered, setBootRendered] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("home");
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showCursor, setShowCursor] = useState(false);
+  const [soundOn, setSoundOn] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const labelEls = useRef<Partial<Record<OrbitNodeKey, HTMLElement | null>>>({});
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioNodesRef = useRef<{ master: GainNode; oscs: { o: OscillatorNode; lfo: OscillatorNode }[] } | null>(null);
+
+  const t = I18N[lang];
+
+  const finishBoot = useCallback(() => {
+    setBooted(true);
+    window.setTimeout(() => setBootRendered(false), 700);
+  }, []);
+
+  /* setup */
+  useEffect(() => {
+    setMounted(true);
+    const rm = !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const mobile = window.innerWidth < 860;
+    const cursor = !rm && !!window.matchMedia?.("(pointer: fine)").matches;
+    setReducedMotion(rm);
+    setIsMobile(mobile);
+    setShowCursor(cursor);
+
+    const onResize = () => setIsMobile(window.innerWidth < 860);
+    window.addEventListener("resize", onResize);
+
+    let onCursorMove: ((e: MouseEvent) => void) | undefined;
+    if (cursor) {
+      onCursorMove = (e) => {
+        if (cursorRef.current) cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      };
+      window.addEventListener("mousemove", onCursorMove);
+    }
+
+    const bootTimer = window.setTimeout(finishBoot, rm ? 300 : 2300);
+
+    return () => {
+      window.clearTimeout(bootTimer);
+      window.removeEventListener("resize", onResize);
+      if (onCursorMove) window.removeEventListener("mousemove", onCursorMove);
+    };
+  }, [finishBoot]);
+
+  /* scroll spy + reveal + progress bars */
+  useEffect(() => {
+    if (!mounted) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    const spy = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setActiveSection(e.target.getAttribute("data-section") || "home")),
+      { rootMargin: "-35% 0px -55% 0px", threshold: 0 },
+    );
+    root.querySelectorAll("[data-section]").forEach((s) => spy.observe(s));
+
+    const reveal = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          (e.target as HTMLElement).style.opacity = "1";
+          (e.target as HTMLElement).style.transform = "none";
+          reveal.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+    );
+    root.querySelectorAll("[data-reveal]").forEach((el) => reveal.observe(el));
+
+    const bars = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          (e.target as HTMLElement).style.width = e.target.getAttribute("data-target") + "%";
+          bars.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.4 },
+    );
+    root.querySelectorAll("[data-bar]").forEach((el) => bars.observe(el));
+
+    return () => {
+      spy.disconnect();
+      reveal.disconnect();
+      bars.disconnect();
+    };
+  }, [mounted, lang]);
+
+  /* ambient audio */
+  const stopAmbient = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    const nodes = audioNodesRef.current;
+    if (!ctx || !nodes) return;
+    nodes.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+    window.setTimeout(() => nodes.oscs.forEach(({ o, lfo }) => { try { o.stop(); lfo.stop(); } catch {} }), 900);
+    audioNodesRef.current = null;
+  }, []);
+
+  const startAmbient = useCallback(() => {
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+      const master = ctx.createGain();
+      master.gain.value = 0;
+      master.connect(ctx.destination);
+      master.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 1.6);
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 800;
+      filter.connect(master);
+      const freqs = [110, 164.81, 220];
+      const oscs = freqs.map((f, i) => {
+        const o = ctx.createOscillator();
+        o.type = i === 1 ? "triangle" : "sine";
+        o.frequency.value = f;
+        const g = ctx.createGain();
+        g.gain.value = 0.5 / freqs.length;
+        o.connect(g);
+        g.connect(filter);
+        o.start();
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 0.05 + i * 0.02;
+        const lfoGain = ctx.createGain();
+        lfoGain.gain.value = 4;
+        lfo.connect(lfoGain);
+        lfoGain.connect(o.detune);
+        lfo.start();
+        return { o, lfo };
+      });
+      audioNodesRef.current = { master, oscs };
+    } catch (e) {
+      console.warn("audio unavailable", e);
+    }
+  }, []);
+
+  const playTick = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (!soundOn || !ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 880;
+    g.gain.value = 0.0001;
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    o.stop(ctx.currentTime + 0.2);
+  }, [soundOn]);
+
+  useEffect(() => () => {
+    stopAmbient();
+    const ctx = audioCtxRef.current;
+    if (ctx) window.setTimeout(() => { try { ctx.close(); } catch {} }, 950);
+  }, [stopAmbient]);
+
+  const toggleSound = () => {
+    if (soundOn) stopAmbient();
+    else startAmbient();
+    setSoundOn((s) => !s);
+  };
+
+  const scrollTo = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.pageYOffset - 64;
+    window.scrollTo({ top: y, behavior: "smooth" });
+    setMobileNavOpen(false);
+    playTick();
+  }, [playTick]);
+
+  const magnetMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const x = e.clientX - r.left - r.width / 2;
+    const y = e.clientY - r.top - r.height / 2;
+    el.style.transform = `translate(${x * 0.15}px, ${y * 0.3}px)`;
+  };
+  const magnetLeave = (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = "translate(0,0)"; };
+
+  const tiltMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(900px) rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg) translateY(-4px)`;
+    el.style.boxShadow = "0 24px 44px -22px oklch(0.75 0.14 150 / 0.4)";
+  };
+  const tiltLeave = (e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.transform = "none";
+    e.currentTarget.style.boxShadow = "none";
+  };
+
+  const heroFallback = reducedMotion;
+  const eyebrowNum: React.CSSProperties = { fontFamily: MONO, fontSize: 12, color: "oklch(0.5 0.01 250)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 6, padding: "4px 9px" };
+  const dashedDot = (c: string): React.CSSProperties => ({ width: 20, height: 20, borderRadius: "50%", border: `1.5px dashed ${c}`, position: "relative", display: "inline-block", animation: "bnSpin 12s linear infinite" });
+
+  const timeline = useMemo(() => DATA.timeline.map((tl) => ({ year: tl.year, text: tl[lang] })), [lang]);
+
   return (
-    <main className={`min-h-screen bg-background ${robotoSlab.className}`}>
-      {/* Header with theme toggle */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-6xl items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="font-semibold text-xl">
-            Camilo<span className="text-primary">Benitez</span>
-          </Link>
+    <div
+      ref={rootRef}
+      className="bn-root"
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        width: "100%",
+        background: "oklch(0.15 0.006 250)",
+        backgroundImage:
+          "linear-gradient(oklch(1 0 0 / 0.025) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.025) 1px, transparent 1px)",
+        backgroundSize: "48px 48px",
+        color: "oklch(0.96 0.003 250)",
+        fontFamily: BODY,
+        overflowX: "hidden",
+      }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: BASE_CSS }} />
 
-          {/* Navegación (solo en pantallas medianas y grandes) */}
-          <nav className="hidden md:flex items-center gap-6">
-            {[
-              { href: "#about", label: "Sobre mí" },
-              { href: "#skills", label: "Habilidades" },
-              { href: "#projects", label: "Proyectos" },
-              { href: "#experience", label: "Experiencia" },
-              { href: "#education", label: "Educación" },
-              { href: "#certificados", label: "Certificados" },
-              { href: "#contact", label: "Contacto" },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="relative text-sm font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-1 group"
-              >
-                <span>{item.label}</span>
-                <span className="absolute left-0 -bottom-0.5 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
-              </Link>
+      {/* boot overlay */}
+      {bootRendered && (
+        <div
+          onClick={() => !booted && finishBoot()}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "oklch(0.11 0.005 250)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            opacity: booted ? 0 : 1,
+            pointerEvents: booted ? "none" : "auto",
+            transition: "opacity 0.6s ease",
+          }}
+        >
+          <div style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.08em", color: "oklch(0.75 0.14 150)", display: "flex", flexDirection: "column", gap: 10, textAlign: "center" }}>
+            {t.boot.map((line, i) => (
+              <div key={i} style={{ animation: "bnBoot 0.4s ease forwards", animationDelay: `${(i * 0.32).toFixed(2)}s`, opacity: 0 }}>
+                {line}
+              </div>
             ))}
-          </nav>
-
-          {/* Contenedor de acciones: Tema y botón de contacto */}
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Button
-              asChild
-              className="bg-gradient-to-r from-primary via-fuchsia-500 to-blue-500 text-white font-semibold shadow-lg hover:from-primary/90 hover:to-blue-500/90 transition-all"
-              size="sm"
-            >
-              <Link href="#contact" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Contáctame
-              </Link>
-            </Button>
+          </div>
+          <div style={{ position: "absolute", bottom: 36, left: 0, right: 0, textAlign: "center", fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)" }}>
+            {t.skip}
           </div>
         </div>
+      )}
+
+      {/* custom cursor */}
+      {showCursor && (
+        <div
+          ref={cursorRef}
+          style={{ position: "fixed", top: 0, left: 0, width: 18, height: 18, marginLeft: -9, marginTop: -9, borderRadius: "50%", border: "1px solid oklch(0.96 0.003 250 / 0.6)", pointerEvents: "none", zIndex: 9000, willChange: "transform", transition: "opacity 0.2s" }}
+        />
+      )}
+
+      {/* header */}
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", background: "oklch(0.15 0.006 250 / 0.72)", backdropFilter: "blur(14px)", borderBottom: "1px solid oklch(1 0 0 / 0.08)" }}>
+        <div style={{ fontFamily: SG, fontWeight: 700, fontSize: 15, letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 9 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "oklch(0.75 0.14 150)", boxShadow: "0 0 8px oklch(0.75 0.14 150 / 0.8)", animation: "bnPulse 2.4s ease infinite", display: "inline-block" }} />
+          BENICHI
+        </div>
+
+        {isMobile ? (
+          <button onClick={() => setMobileNavOpen((s) => !s)} style={{ background: "none", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 8, width: 36, height: 32, color: "oklch(0.96 0.003 250)", fontFamily: MONO, cursor: "pointer" }}>
+            {mobileNavOpen ? "✕" : "≡"}
+          </button>
+        ) : (
+          <nav style={{ display: "flex", alignItems: "center", gap: 26 }}>
+            {NAV_ORDER.map((id) => {
+              const active = activeSection === id;
+              return (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(e) => { e.preventDefault(); scrollTo(id); }}
+                  onMouseMove={magnetMove}
+                  onMouseLeave={magnetLeave}
+                  style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em", color: active ? "oklch(0.96 0.003 250)" : "oklch(0.55 0.01 250)", fontWeight: active ? 600 : 400, textDecoration: "none", cursor: "pointer" }}
+                >
+                  {t.nav[id]}
+                </a>
+              );
+            })}
+            <button onClick={toggleSound} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "6px 13px", cursor: "pointer" }}>
+              {soundOn ? "SND: ON" : "SND: OFF"}
+            </button>
+            <button onClick={() => setLang((l) => (l === "es" ? "en" : "es"))} style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "6px 13px", cursor: "pointer" }}>
+              {lang.toUpperCase()}
+            </button>
+          </nav>
+        )}
       </header>
 
-      {/* Hero Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="relative py-24 md:py-32 px-4 overflow-hidden bg-gradient-to-br from-background to-muted/50"
-      >
-        {/* Galaxia animada 3D usando Three.js */}
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-10">
-            <motion.div
-              className="md:w-2/3"
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              viewport={{ once: true }}
+      {mobileNavOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 190, background: "oklch(0.15 0.006 250 / 0.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 28 }}>
+          {NAV_ORDER.map((id) => (
+            <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); scrollTo(id); }} style={{ fontFamily: SG, fontSize: 26, fontWeight: 600, color: "oklch(0.96 0.003 250)", textDecoration: "none" }}>
+              {t.nav[id]}
+            </a>
+          ))}
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+            <button onClick={toggleSound} style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "8px 18px" }}>
+              {soundOn ? "SND: ON" : "SND: OFF"}
+            </button>
+            <button onClick={() => setLang((l) => (l === "es" ? "en" : "es"))} style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.96 0.003 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 999, padding: "8px 18px" }}>
+              {lang.toUpperCase()}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* hero */}
+      <section id="home" data-section="home" style={{ position: "relative", height: "100vh", minHeight: 640, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          {mounted && !heroFallback && <HeroOrbit labelEls={labelEls.current} isMobile={isMobile} />}
+          {heroFallback && (
+            <div style={{ position: "absolute", top: "50%", left: "50%", width: 520, height: 520, margin: "-260px 0 0 -260px", borderRadius: "50%", border: "1px solid oklch(1 0 0 / 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "70%", height: "70%", borderRadius: "50%", border: "1px dashed oklch(0.75 0.14 150 / 0.4)" }} />
+            </div>
+          )}
+          {!heroFallback && DOMAIN_DEFS.map((d) => (
+            <div
+              key={d.key}
+              ref={(el) => { labelEls.current[d.key] = el; }}
+              style={{ position: "absolute", top: 0, left: 0, display: "flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: "oklch(0.9 0.005 250)", whiteSpace: "nowrap", opacity: 0, willChange: "transform" }}
             >
-              <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium mb-6">
-                <span className="flex h-2 w-2 rounded-full bg-primary mr-2"></span>
-                <span>Disponible para nuevas oportunidades</span>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary via-fuchsia-500 to-blue-500 drop-shadow-lg mb-2">
-                Camilo Benitez
-              </h1>
-              <h2 className="mt-2 text-2xl md:text-3xl font-medium text-muted-foreground">
-                Ingeniero de Software Backend
-              </h2>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button size="lg" className="gap-2 group" asChild>
-                  <Link
-                  href="/CV%20Camilo%20Benitez%20Valdes.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >
-                  <Download size={18} />
-                  Descargar Hoja de Vida
-                  <MoveRight className="ml-1 h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="gap-2" asChild>
-                  <Link href="#contact">
-                    Contáctame
-                    <ChevronRight size={18} />
-                  </Link>
-                </Button>
-              </div>
-              <div className="mt-8 flex gap-4">
-                <Link
-                  href="https://github.com/IngBenichi"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Github className="h-5 w-5" />
-                    <span className="sr-only">GitHub</span>
-                  </Button>
-                </Link>
-                <Link
-                  href="https://www.linkedin.com/in/benichidev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Linkedin className="h-5 w-5" />
-                    <span className="sr-only">LinkedIn</span>
-                  </Button>
-                </Link>
-                <Link href="mailto:djangobenichi@gmail.com">
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Mail className="h-5 w-5" />
-                    <span className="sr-only">Email</span>
-                  </Button>
-                </Link>
-              </div>
-            </motion.div>
-            <motion.div
-              className="md:w-1/3 flex justify-center"
-              initial={{
-                opacity: 0,
-                scale: 0.8,
-                filter: "blur(8px)",
-                rotateY: 45,
-              }}
-              whileInView={{
-                opacity: 1,
-                scale: 1,
-                filter: "blur(0px)",
-                rotateY: 0,
-              }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              viewport={{ once: true }}
-              style={{ perspective: 1000 }}
-            >
-              <div className="relative w-64 h-64 rounded-full overflow-hidden border-4 border-background shadow-xl">
-                <Image
-                  src="/profile.png?height=256&width=256"
-                  alt="Camilo Benitez"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </motion.div>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.color }} />
+              {t.domains[d.key]}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 24px", maxWidth: 760 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid oklch(1 0 0 / 0.18)", borderRadius: 999, padding: "7px 16px", fontFamily: MONO, fontSize: 11, letterSpacing: "0.05em", color: "oklch(0.75 0.14 150)", marginBottom: 28 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "oklch(0.75 0.14 150)", animation: "bnPulse 2s ease infinite", display: "inline-block" }} />
+            {t.heroBadge}
+          </div>
+          <h1 style={{ fontFamily: SG, fontWeight: 700, fontSize: "clamp(48px,10vw,108px)", lineHeight: 0.95, letterSpacing: "-0.02em", margin: 0, color: "oklch(0.97 0.003 250)" }}>BENICHI</h1>
+          <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: "0.08em", color: "oklch(0.5 0.01 250)", marginTop: 14 }}>Camilo Benítez — {t.heroTitle}</div>
+          <p style={{ fontSize: 17, lineHeight: 1.6, color: "oklch(0.68 0.012 250)", marginTop: 22, maxWidth: 560 }}>{t.heroCopy}</p>
+          <div style={{ display: "flex", gap: 14, marginTop: 34, flexWrap: "wrap", justifyContent: "center" }}>
+            <button onClick={() => scrollTo("work")} onMouseMove={magnetMove} onMouseLeave={magnetLeave} style={{ fontFamily: BODY, fontWeight: 600, fontSize: 14, background: "oklch(0.96 0.003 250)", color: "oklch(0.15 0.006 250)", border: "none", borderRadius: 8, padding: "13px 24px", cursor: "pointer" }}>{t.ctaWork}</button>
+            <button onClick={() => scrollTo("contact")} onMouseMove={magnetMove} onMouseLeave={magnetLeave} style={{ fontFamily: BODY, fontWeight: 600, fontSize: 14, background: "transparent", color: "oklch(0.96 0.003 250)", border: "1px solid oklch(1 0 0 / 0.24)", borderRadius: 8, padding: "13px 24px", cursor: "pointer" }}>{t.ctaContact}</button>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent"></div>
-      </motion.section>
 
-      {/* About Me Section */}
-      <motion.section
-        id="about"
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-10 px-2"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-16">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="font-bold text-xl">01</span>
+        <div style={{ position: "absolute", left: 28, bottom: 28, zIndex: 2, fontFamily: MONO, fontSize: 10, color: "oklch(0.55 0.01 250)", background: "oklch(0.18 0.007 250 / 0.7)", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 10, padding: "14px 16px", minWidth: 150, backdropFilter: "blur(8px)" }} className="bn-syspanel">
+          <div style={{ letterSpacing: "0.08em", color: "oklch(0.85 0.005 250)", marginBottom: 8, fontWeight: 600 }}>{t.systemPanelTitle}</div>
+          {DOMAIN_DEFS.map((d) => (
+            <div key={d.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "2.5px 0" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.color }} />
+                {t.domains[d.key]}
+              </span>
+              <span style={{ color: "oklch(0.75 0.14 150)" }}>{t.systemStatus}</span>
             </div>
-            <h2 className="text-3xl font-bold text-foreground">Sobre mí</h2>
+          ))}
+        </div>
+
+        <div style={{ position: "absolute", right: 28, bottom: 28, zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.15em", color: "oklch(0.55 0.01 250)" }}>
+          <span style={{ writingMode: "vertical-rl" }}>{t.scroll}</span>
+          <span style={{ width: 1, height: 30, background: "oklch(1 0 0 / 0.25)", display: "inline-block", animation: "bnBounce 1.8s ease infinite" }} />
+        </div>
+      </section>
+
+      {/* about */}
+      <section id="about" data-section="about" style={{ padding: "120px 32px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "-15%", left: "-10%", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.75 0.14 150 / 0.14), transparent 70%)", filter: "blur(40px)", pointerEvents: "none", animation: "bnDrift 24s ease-in-out infinite", zIndex: 0 }} />
+        <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
+            <span style={eyebrowNum}>{t.aboutNum}</span>
+            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{t.aboutEyebrow}</h2>
+            <span style={dashedDot("oklch(0.75 0.14 150 / 0.5)")}>
+              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.75 0.14 150)" }} />
+            </span>
           </div>
-          <div className="grid md:grid-cols-1 gap-12 items-center">
-            <div className="space-y-6">
-              <p className="text-lg text-muted-foreground">
-                Soy un{" "}
-                <span className="font-semibold text-foreground">
-                  Ingeniero De Software Backend
-                </span>{" "}
-                con una profunda pasión por la tecnología y la resolución de
-                problemas complejos. Desde mis primeros pasos en la ingeniería
-                de sistemas, he encontrado en el desarrollo backend el espacio
-                ideal para combinar lógica, creatividad y eficiencia.
-              </p>
-              <p className="text-lg text-muted-foreground">
-                Mi experiencia abarca{" "}
-                <span className="font-semibold text-foreground">
-                  Diseño De APIs Robustas
-                </span>
-                ,{" "}
-                <span className="font-semibold text-foreground">
-                  Arquitecturas De Microservicios
-                </span>{" "}
-                y la implementación de soluciones escalables en la nube.
-                Disfruto optimizando el rendimiento de sistemas, asegurando la
-                calidad del código y aplicando buenas prácticas de ingeniería
-                para crear productos confiables y mantenibles.
-              </p>
-              <p className="text-lg text-muted-foreground">
-                Me motiva el aprendizaje continuo y la colaboración. He
-                participado en proyectos open-source, hackathons y equipos
-                multidisciplinarios, donde he fortalecido habilidades técnicas y
-                de comunicación. Mi enfoque está en aportar valor real,
-                adaptándome rápidamente a nuevas tecnologías y retos.
-              </p>
-              <p className="text-lg text-muted-foreground">
-                Actualmente, busco contribuir en proyectos que requieran{" "}
-                <span className="font-semibold text-foreground">
-                  Soluciones Backend Innovadoras
-                </span>{" "}
-                y donde pueda seguir creciendo profesionalmente. Si buscas a
-                alguien comprometido, curioso y orientado a resultados,
-                ¡conversemos!
-              </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px,1fr))", gap: 56 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <p data-reveal style={{ fontSize: 17, lineHeight: 1.7, color: "oklch(0.75 0.012 250)", margin: 0 }}>{t.aboutP1}</p>
+              <p data-reveal style={{ fontSize: 17, lineHeight: 1.7, color: "oklch(0.75 0.012 250)", margin: 0, transitionDelay: "0.1s" }}>{t.aboutP2}</p>
+            </div>
+            <div>
+              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)", marginBottom: 20 }}>{t.timelineTitle}</div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {timeline.map((tl, i) => (
+                  <div key={i} data-reveal style={{ display: "flex", gap: 16, paddingBottom: 22, position: "relative", transitionDelay: `${i * 90}ms` }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <span style={{ width: 9, height: 9, borderRadius: "50%", background: "oklch(0.75 0.14 150)", flexShrink: 0 }} />
+                      <span style={{ width: 1, flex: 1, background: "oklch(1 0 0 / 0.14)", marginTop: 4 }} />
+                    </div>
+                    <div style={{ paddingBottom: 4 }}>
+                      <div style={{ fontFamily: MONO, fontSize: 11, color: "oklch(0.75 0.14 150)", marginBottom: 4 }}>{tl.year}</div>
+                      <div style={{ fontSize: 15, color: "oklch(0.9 0.005 250)", lineHeight: 1.5 }}>{tl.text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Technical Skills Section */}
-      <motion.section
-        id="skills"
-        initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
-        whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-        transition={{ duration: 0.9, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-10 px-2 bg-muted/30"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-16">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="font-bold text-xl">02</span>
-            </div>
-            <h2 className="text-3xl font-bold text-foreground">
-              Habilidades Técnicas
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-              Dominio de tecnologías backend modernas, frameworks robustos,
-              bases de datos relacionales y no relacionales, así como
-              herramientas DevOps y metodologías ágiles. Mi enfoque está en la
-              calidad, escalabilidad y seguridad del software.
-            </p>
+      {/* stack */}
+      <section id="stack" data-section="stack" style={{ padding: "120px 32px", background: "oklch(0.13 0.006 250)", borderTop: "1px solid oklch(1 0 0 / 0.06)", borderBottom: "1px solid oklch(1 0 0 / 0.06)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: 560, height: 560, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.72 0.14 250 / 0.13), transparent 70%)", filter: "blur(44px)", pointerEvents: "none", animation: "bnDrift 28s ease-in-out infinite reverse", zIndex: 0 }} />
+        <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+            <span style={eyebrowNum}>{t.stackNum}</span>
+            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{t.stackEyebrow}</h2>
+            <span style={dashedDot("oklch(0.72 0.14 250 / 0.5)")}>
+              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.72 0.14 250)" }} />
+            </span>
           </div>
+          <p style={{ fontSize: 16, color: "oklch(0.6 0.012 250)", maxWidth: 560, margin: "0 0 56px 46px" }}>{t.stackIntro}</p>
 
-          <Tabs defaultValue="languages" className="w-full">
-            <TabsList className="grid w-full md:w-fit mx-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-12 bg-transparent shadow-none">
-              <TabsTrigger value="languages">Lenguajes</TabsTrigger>
-              <TabsTrigger value="frameworks">Frameworks</TabsTrigger>
-              <TabsTrigger value="databases">Bases de datos</TabsTrigger>
-              <TabsTrigger value="tools">DevOps y Herramientas</TabsTrigger>
-            </TabsList>
-
-            {/* Lenguajes */}
-            <TabsContent value="languages" className="mt-6">
-              <motion.div
-                key="languages"
-                initial={{
-                  opacity: 0,
-                  y: 40,
-                  scale: 0.95,
-                  filter: "blur(8px)",
-                }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
-                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
-                className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
-              >
-                {/* Python */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/python-svgrepo-com.svg"
-                      alt="Python"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">Python</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      5+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Javascript */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/javascript-svgrepo-com.svg"
-                      alt="Javascript"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      Javascript
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      3+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Typescript */}
-                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/typescript-svgrepo-com.svg"
-                      alt="Typescript"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      Typescript
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card> */}
-                {/* PHP */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/php-svgrepo-com.svg"
-                      alt="PHP"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">PHP</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </TabsContent>
-
-            {/* Frameworks */}
-            <TabsContent value="frameworks" className="mt-6">
-              <motion.div
-                key="frameworks"
-                initial={{
-                  opacity: 0,
-                  y: 40,
-                  scale: 0.95,
-                  filter: "blur(8px)",
-                }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
-                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
-                className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
-              >
-                {/* Node.js */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/node-js-svgrepo-com.svg"
-                      alt="Node.js"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      Node.js
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      4+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Express */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/express-svgrepo-com.svg"
-                      alt="Express"
-                      className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-primary/60 bg-white p-1"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      Express
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      4+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Django */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/django-icon-svgrepo-com.svg"
-                      alt="Django"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">Django</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      3+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Flask */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/flask-svgrepo-com.svg"
-                      alt="Flask"
-                      className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-primary/60 bg-white p-1"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">Flask</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* FastAPI */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/fastapi-svgrepo-com.svg"
-                      alt="FastAPI"
-                      className="w-10 h-10 mx-auto mb-2 rounded-full border-2 border-primary/60 bg-white p-1"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      FastAPI
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Laravel */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/laravel-svgrepo-com.svg"
-                      alt="Laravel"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      Laravel
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </TabsContent>
-
-            {/* Bases de datos */}
-            <TabsContent value="databases" className="mt-6">
-              <motion.div
-                key="databases"
-                initial={{
-                  opacity: 0,
-                  y: 40,
-                  scale: 0.95,
-                  filter: "blur(8px)",
-                }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
-                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
-                className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
-              >
-                {/* PostgreSQL */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/postgresql-svgrepo-com.svg"
-                      alt="PostgreSQL"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      PostgreSQL
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      3+ años
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* MySQL */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/mysql-svgrepo-com.svg"
-                      alt="MySQL"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">MySQL</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* SQLite */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/sqlite-svgrepo-com.svg"
-                      alt="SQLite"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">SQLite</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* MongoDB */}
-                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/mongodb-svgrepo-com.svg"
-                      alt="MongoDB"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      MongoDB
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Básico
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      1 año
-                    </div>
-                  </CardContent>
-                </Card> */}
-              </motion.div>
-            </TabsContent>
-
-            {/* DevOps y Herramientas */}
-            <TabsContent value="tools" className="mt-6">
-              <motion.div
-                key="tools"
-                initial={{
-                  opacity: 0,
-                  y: 40,
-                  scale: 0.95,
-                  filter: "blur(8px)",
-                }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(8px)" }}
-                transition={{ duration: 1.0, type: "spring", bounce: 0.3 }}
-                className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4"
-              >
-                {/* Docker */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/docker-svgrepo-com.svg"
-                      alt="Docker"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">Docker</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      3+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Azure DevOps */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/azure-devops-svgrepo-com.svg"
-                      alt="Azure DevOps"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">
-                      Azure DevOps
-                    </p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* AWS */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/aws-svgrepo-com.svg"
-                      alt="AWS"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">AWS</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Básico
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      1 año
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Git */}
-                <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/git-svgrepo-com.svg"
-                      alt="Git"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">Git</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      5+ años
-                    </div>
-                  </CardContent>
-                </Card>
-                {/* Linux */}
-                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/linux-svgrepo-com.svg"
-                      alt="Linux"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">Linux</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Avanzado
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      4+ años
-                    </div>
-                  </CardContent>
-                </Card> */}
-                {/* CI/CD */}
-                {/* <Card className="border-primary/40 shadow-md hover:shadow-xl transition-shadow group relative overflow-visible">
-                  <CardContent className="p-4 sm:p-6 text-center flex flex-col items-center">
-                    <img
-                      src="/cicd-svgrepo-com.svg"
-                      alt="CI/CD"
-                      className="w-10 h-10 mx-auto mb-2"
-                    />
-                    <p className="font-semibold text-base sm:text-lg">CI/CD</p>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      Intermedio
-                    </span>
-                    <div className="absolute top-2 right-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      2+ años
-                    </div>
-                  </CardContent>
-                </Card> */}
-              </motion.div>
-              <div className="mt-8 text-center text-muted-foreground text-sm">
-                Experiencia en integración y despliegue continuo, automatización
-                de pipelines, monitoreo y gestión de infraestructura en la nube.
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </motion.section>
-
-      {/* Proyectos Destacados con Carrusel */}
-      <motion.section
-        id="projects"
-        initial={{ opacity: 0, y: 80, rotateY: 45 }}
-        whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-10 px-2"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-16">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="font-bold text-xl">03</span>
-            </div>
-            <h2 className="text-3xl font-bold text-foreground">
-              Proyectos Destacados
-            </h2>
-          </div>
-          <div className="relative">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ProjectCard
-                title="Benichi's Blog"
-                role="Desarrollador Backend Líder"
-                description="Desarrollé una plataforma de blog personal enfocada en rendimiento y SEO, utilizando renderizado del lado del servidor y generación de sitios estáticos."
-                technologies={["Django", "PostgreSQL", "Google CLoud", "Docker"]}
-                features={[
-                  "Arquitectura de trabajadores escalable horizontalmente",
-                  "Planificación de trabajos por prioridad",
-                  "Panel de monitoreo en tiempo real",
-                  "Mecanismos de recuperación ante fallos",
-                ]}
-                githubUrl="https://github.com/IngBenichi/Blog-Benichi"
-                demoUrl="https://my-blog-app-django.onrender.com/"
-                imageUrl="/blog.png?height=300&width=600"
-              />
-              <ProjectCard
-                title="YTMediaConverter"
-                role="Ingeniero Backend"
-                description="Aplicación para descargar y convertir videos de YouTube en MP3 o MP4, con interfaz gráfica intuitiva y barra de progreso en tiempo real."
-                technologies={["Python"]}
-                features={["Seguimiento de pedidos en tiempo real"]}
-                githubUrl="https://github.com/IngBenichi/YTMediaConverter"
-                imageUrl="/yt.JPG?height=300&width=600"
-              />
-              <ProjectCard
-                title="Crypto Dashboard"
-                role="Desarrollador Frontend"
-                description="Dashboard interactivo para visualizar datos de criptomonedas en tiempo real con gráficos y estadísticas detalladas."
-                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
-                features={[
-                  "Visualización de datos en tiempo real",
-                  "Gráficos interactivos de precios",
-                  "Dashboard responsivo y moderno",
-                  "Integración con APIs de criptomonedas",
-                ]}
-                githubUrl="https://github.com/IngBenichi/crypto-dashboard"
-                demoUrl="https://v0-crypto-dashboard-mu-tawny.vercel.app/"
-                imageUrl="/crypto.png?height=300&width=600"
-              />
-              <ProjectCard
-                title="Auction Product Page"
-                role="Desarrollador Frontend"
-                description="Página de producto de subasta con diseño moderno y funcionalidades interactivas para una experiencia de usuario optimizada."
-                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
-                features={[
-                  "Interfaz moderna y responsive",
-                  "Componentes reutilizables",
-                  "Diseño optimizado para conversión",
-                  "Experiencia de usuario fluida",
-                ]}
-                githubUrl="https://github.com/IngBenichi/auction-product-page"
-                demoUrl="https://v0-auction-product-page.vercel.app/"
-                imageUrl="/auction.png?height=300&width=600"
-              />
-              <ProjectCard
-                title="Benichi Dev Studio"
-                role="Desarrollador Frontend"
-                description="Landing page profesional para estudio de desarrollo, con diseño moderno y secciones informativas sobre servicios y proyectos."
-                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
-                features={[
-                  "Diseño profesional y atractivo",
-                  "Secciones de servicios y portafolio",
-                  "Optimizado para SEO",
-                  "Animaciones y transiciones suaves",
-                ]}
-                githubUrl="https://github.com/IngBenichi/benichi-dev-studio-landing-page"
-                demoUrl="https://v0-benichi-dev-studio-landing-page.vercel.app/"
-                imageUrl="/benichi-dev.png?height=300&width=600"
-              />
-              <ProjectCard
-                title="Battle Zone Landing"
-                role="Desarrollador Frontend"
-                description="Landing page temática para zona de batalla, con diseño impactante y elementos visuales dinámicos."
-                technologies={["React", "Next.js", "TypeScript", "Tailwind CSS"]}
-                features={[
-                  "Diseño temático y visual atractivo",
-                  "Animaciones y efectos interactivos",
-                  "Responsive design",
-                  "Optimización de performance",
-                ]}
-                githubUrl="https://github.com/IngBenichi/battle-zone-landing-page"
-                demoUrl="https://v0-battle-zone-landing-page.vercel.app/"
-                imageUrl="/battle.png?height=300&width=600"
-              />
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Work Experience Section */}
-      <motion.section
-        id="experience"
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-8 px-2 sm:py-12 sm:px-2 bg-muted/30"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-10 sm:mb-16">
-            <div className="inline-flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 text-primary mb-3 sm:mb-4">
-              <span className="font-bold text-lg sm:text-xl">04</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Experiencia Laboral
-            </h2>
-          </div>
-
-          <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
-            <div className="flex-1 rounded-lg border border-border/30 bg-background/80 p-4 shadow-md flex flex-col justify-between">
-              <ExperienceCard
-                company="Domotes S.A.S"
-                position="Backend Developer Junior"
-                period="Dec 2024 - Present"
-                location="Barranquilla, Atlántico, Colombia · On-site"
-                description="En mi rol, desarrollo y mantengo sistemas backend escalables utilizando Laravel y microservicios basados en Python. Me enfoco en escribir código limpio y eficiente, siguiendo las mejores prácticas de desarrollo de software y patrones arquitectónicos para asegurar la mantenibilidad y el rendimiento."
-                achievements={[
-                  "Desarrollé y mantuve sistemas backend escalables usando Laravel y microservicios en Python",
-                  "Construí y gestioné pipelines de CI/CD aprovechando Microsoft Azure",
-                  "Trabajé con contenedores Docker para crear entornos consistentes y optimizar los despliegues",
-                  "Administré y optimicé bases de datos, asegurando alto rendimiento y confiabilidad",
-                  "Diseñé e implementé APIs RESTful, siguiendo las mejores prácticas",
-                  "Contribuí a mantener una arquitectura de sistema robusta, escalable y de alta calidad",
-                ]}
-              />
-            </div>
-            <div className="flex-1 rounded-lg border border-border/30 bg-background/80 p-4 shadow-md flex flex-col justify-between">
-              <ExperienceCard
-                company="ARC4M"
-                position="Co-Founder & Software Engineer"
-                period="Jan 2024 - Present"
-                location="Barranquilla, Atlántico, Colombia · Remoto"
-                description="Como cofundador y software engineer en ARC4M, lidero el desarrollo de soluciones tecnológicas innovadoras, participando en la toma de decisiones estratégicas y en la implementación de arquitecturas robustas para nuestros productos y servicios."
-                achievements={[
-                  "Co-fundé la empresa y participé en la definición de la visión tecnológica",
-                  "Diseñé e implementé arquitecturas escalables para productos SaaS",
-                  "Lideré equipos de desarrollo en proyectos de software a medida",
-                  "Implementé prácticas de DevOps y despliegue continuo",
-                  "Colaboré con clientes para entender y resolver necesidades técnicas complejas",
-                ]}
-              />
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Education Section */}
-      <motion.section
-        id="education"
-        initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
-        whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-        transition={{ duration: 0.9, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-10 px-2"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-16">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="font-bold text-xl">05</span>
-            </div>
-            <h2 className="text-3xl font-bold text-foreground">Educación</h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-              Formación académica sólida en ingeniería de sistemas,
-              complementada con proyectos prácticos, participación en
-              actividades extracurriculares y un enfoque constante en el
-              aprendizaje de nuevas tecnologías.
-            </p>
-          </div>
-
-          <div className="max-w-3xl mx-auto space-y-8">
-            <Card className="border-border/40 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="flex flex-row items-center gap-4">
-                {/* <div className="flex-shrink-0">
-                  <Image
-                    src="/cuc-logo.png"
-                    alt="Universidad de la Costa CUC"
-                    width={56}
-                    height={56}
-                    className="rounded-full border border-border bg-white"
-                  />
-                </div> */}
-                <div>
-                  <CardTitle className="text-2xl font-semibold">
-                    Ingeniería en Sistemas
-                  </CardTitle>
-                  <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1">
-                    <span>Universidad de la Costa CUC</span>
-                    <span className="hidden sm:inline mx-2">•</span>
-                    <span>Feb 2023 - Dic 2027 (En curso)</span>
-                  </CardDescription>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px,1fr))", gap: 20 }}>
+            {DATA.hubs.map((hub, hi) => (
+              <div key={hub.key} data-reveal style={{ border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 14, padding: 22, background: "oklch(0.16 0.006 250 / 0.6)", transitionDelay: `${hi * 100}ms` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: hub.color, boxShadow: `0 0 8px ${hub.color}` }} />
+                  <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em", color: "oklch(0.85 0.005 250)" }}>{hub.label[lang]}</span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Actualmente cursando la carrera de Ingeniería en Sistemas, con
-                  énfasis en desarrollo de software, arquitectura de sistemas y
-                  tecnologías backend. He participado en proyectos
-                  colaborativos, hackathons universitarios y actividades de
-                  investigación.
-                </p>
-                <div className="mb-4">
-                  <h4 className="font-medium mb-2">Cursos relevantes:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "Fundamentos de Programación",
-                      "Gestión de Bases de Datos",
-                      "Ingeniería de Software",
-                      "Redes de Computadoras",
-                      "Desarrollo Web",
-                      "Arquitectura de Computadores",
-                      "Sistemas Distribuidos",
-                      "Seguridad Informática",
-                    ].map((course) => (
-                      <Badge key={course} variant="secondary">
-                        {course}
-                      </Badge>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {hub.items.map((it) => {
+                    const level = it.level[lang];
+                    const pct = LEVEL_PCT[level] ?? 60;
+                    return (
+                      <div key={it.name} style={{ display: "flex", flexDirection: "column", gap: 6, paddingBottom: 9, borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 14.5, color: "oklch(0.94 0.003 250)", fontWeight: 500 }}>{it.name}</span>
+                          <span style={{ fontFamily: MONO, fontSize: 10.5, color: "oklch(0.55 0.01 250)", textAlign: "right" }}>{level} · {it.years}</span>
+                        </div>
+                        <div style={{ width: "100%", height: 3, borderRadius: 2, background: "oklch(1 0 0 / 0.08)", overflow: "hidden" }}>
+                          <div data-bar data-target={pct} style={{ height: "100%", width: "0%", borderRadius: 2, background: hub.color, transition: "width 1.1s cubic-bezier(0.16,1,0.3,1)" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 64 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)", marginBottom: 20 }}>{t.credEyebrow}</div>
+            <div style={{ position: "relative", overflow: "hidden", WebkitMaskImage: "linear-gradient(90deg, transparent, black 6%, black 94%, transparent)", maskImage: "linear-gradient(90deg, transparent, black 6%, black 94%, transparent)" }}>
+              <div className="bn-marquee" style={{ display: "flex", gap: 14, width: "max-content", animation: "bnMarqueeL 32s linear infinite" }}>
+                {[...DATA.credentials, ...DATA.credentials].map((c, i) => (
+                  <div key={i} style={{ flex: "0 0 150px", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 10, overflow: "hidden", background: "oklch(0.18 0.007 250)" }}>
+                    <div style={{ aspectRatio: "4/3", overflow: "hidden" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={c.img} alt={L(c.name, lang)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    </div>
+                    <div style={{ padding: "8px 10px", fontFamily: MONO, fontSize: 10.5, color: "oklch(0.7 0.012 250)", letterSpacing: "0.03em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{L(c.name, lang)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* work */}
+      <section id="work" data-section="work" style={{ padding: "120px 32px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "10%", left: "50%", width: 600, height: 600, marginLeft: -300, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.78 0.12 200 / 0.1), transparent 70%)", filter: "blur(50px)", pointerEvents: "none", animation: "bnDrift 30s ease-in-out infinite", zIndex: 0 }} />
+        <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+            <span style={eyebrowNum}>{t.workNum}</span>
+            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{t.workEyebrow}</h2>
+            <span style={dashedDot("oklch(0.78 0.12 200 / 0.5)")}>
+              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.78 0.12 200)" }} />
+            </span>
+          </div>
+          <p style={{ fontSize: 16, color: "oklch(0.6 0.012 250)", maxWidth: 560, margin: "0 0 56px 46px" }}>{t.workIntro}</p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px,1fr))", gap: 22 }}>
+            {DATA.projects.map((p, i) => (
+              <div
+                key={p.code}
+                data-reveal
+                onMouseMove={tiltMove}
+                onMouseLeave={tiltLeave}
+                style={{ border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 16, overflow: "hidden", background: "oklch(0.16 0.006 250 / 0.6)", transition: "border-color 0.25s ease, transform 0.15s ease, box-shadow 0.3s ease, opacity 0.7s ease", transitionDelay: `${i * 80}ms` }}
+              >
+                <div style={{ aspectRatio: "16/10", overflow: "hidden", borderBottom: "1px solid oklch(1 0 0 / 0.08)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.image} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                </div>
+                <div style={{ padding: 22 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: "oklch(0.75 0.14 150)", letterSpacing: "0.06em" }}>{p.code}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: "oklch(0.5 0.01 250)" }}>{p.role[lang]}</span>
+                  </div>
+                  <h3 style={{ fontFamily: SG, fontSize: 20, fontWeight: 600, margin: "0 0 10px 0", color: "oklch(0.97 0.003 250)" }}>{p.title}</h3>
+                  <p style={{ fontSize: 14, lineHeight: 1.6, color: "oklch(0.65 0.012 250)", margin: "0 0 16px 0" }}>{p.desc[lang]}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 18 }}>
+                    {p.tech.map((tc) => (
+                      <span key={tc} style={{ fontFamily: MONO, fontSize: 10.5, color: "oklch(0.8 0.005 250)", background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 5, padding: "3px 8px" }}>{tc}</span>
                     ))}
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-2">Logros y actividades:</h4>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                    <li>
-                      Participación en hackathons y competencias de programación
-                      universitaria
-                    </li>
-                    <li>
-                      Miembro activo del semillero de investigación en
-                      tecnologías backend
-                    </li>
-                    <li>
-                      Desarrollo de proyectos académicos enfocados en APIs y
-                      microservicios
-                    </li>
-                    <li>
-                      Colaboración en iniciativas de software libre y mentoría a
-                      estudiantes de semestres inferiores
-                    </li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Certificados Section */}
-      <motion.section
-        id="certificados"
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-10 px-2 bg-muted/30"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-16">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="font-bold text-xl">06</span>
-            </div>
-            <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              Certificados
-              <span className="text-base font-normal text-muted-foreground">
-                (10)
-              </span>
-            </h2>
-          </div>
-
-          <div className="relative"></div>
-          <Carousel
-            className="w-full"
-            opts={{ slidesToScroll: 1, align: "start" }}
-          >
-            <CarouselContent>
-              {/* Certificado 1 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/django.png"
-                          alt="Certificado Django"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        Django
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/django.png"
-                        alt="Certificado Django"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">Django</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 2 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/devops.png"
-                          alt="Certificado DevOps"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        DevOps
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/devops.png"
-                        alt="Certificado DevOps"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">DevOps</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 3 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/django_rest.png"
-                          alt="Certificado Django REST"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        Django REST
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/django_rest.png"
-                        alt="Certificado Django REST"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">
-                      Django REST
-                    </h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 4 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/docker.png"
-                          alt="Certificado Docker"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        Docker
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/docker.png"
-                        alt="Certificado Docker"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">Docker</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 5 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/fastapi.png"
-                          alt="Certificado FastAPI"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        FastAPI
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/fastapi.png"
-                        alt="Certificado FastAPI"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">FastAPI</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 6 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/ia.png"
-                          alt="Certificado Inteligencia Artificial"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        Inteligencia Artificial
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/ia.png"
-                        alt="Certificado Inteligencia Artificial"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">
-                      Inteligencia Artificial
-                    </h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 7 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/laravel_rest.png"
-                          alt="Certificado Laravel REST"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        Laravel REST
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/laravel_rest.png"
-                        alt="Certificado Laravel REST"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">
-                      Laravel REST
-                    </h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 8 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/laravel.png"
-                          alt="Certificado Laravel"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        Laravel
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/laravel.png"
-                        alt="Certificado Laravel"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">Laravel</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 9 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/oauth.png"
-                          alt="Certificado OAuth"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        OAuth
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/oauth.png"
-                        alt="Certificado OAuth"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">OAuth</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-              {/* Certificado 10 */}
-              <CarouselItem
-                className="pl-2 pr-2 flex justify-center 
-  basis-full max-w-full 
-  sm:basis-1/2 sm:max-w-1/2 
-  md:basis-1/3 md:max-w-1/3 
-  lg:basis-1/4 lg:max-w-1/4
-            "
-              >
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex flex-col items-center bg-background rounded-lg shadow p-6 min-w-[300px] max-w-xs cursor-pointer hover:scale-105 transition-transform">
-                      <div className="w-full h-48 relative mb-4">
-                        <Image
-                          src="/owasp.png"
-                          alt="Certificado OWASP"
-                          fill
-                          className="object-contain rounded"
-                        />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground text-center">
-                        OWASP
-                      </h3>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="flex flex-col items-center max-w-4xl w-full bg-background">
-                    <div className="w-full flex justify-center">
-                      <Image
-                        src="/owasp.png"
-                        alt="Certificado OWASP"
-                        width={900}
-                        height={600}
-                        className="object-contain rounded mb-4 max-h-[70vh] w-auto"
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-center">OWASP</h3>
-                  </DialogContent>
-                </Dialog>
-              </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
-      </motion.section>
-
-      {/* Contact Section */}
-      <motion.section
-        id="contact"
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true }}
-        className="py-10 px-2"
-      >
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-center text-center mb-16">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-              <span className="font-bold text-xl">07</span>
-            </div>
-            <h2 className="text-3xl font-bold text-foreground">Contacto</h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <h3 className="text-xl font-semibold mb-6">
-                Información de contacto
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Mail className="h-5 w-5 text-primary" />
+                  <div style={{ display: "flex", gap: 16, fontFamily: MONO, fontSize: 12 }}>
+                    <a href={p.github} target="_blank" rel="noopener noreferrer" style={{ color: "oklch(0.9 0.005 250)" }}>{t.source} →</a>
+                    {p.demo && (
+                      <a href={p.demo} target="_blank" rel="noopener noreferrer" style={{ color: "oklch(0.75 0.14 150)" }}>{t.demo} →</a>
+                    )}
                   </div>
-                  <a
-                    href="mailto:djangobenichi@gmail.com"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    djangobenichi@gmail.com
-                  </a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Linkedin className="h-5 w-5 text-primary" />
-                  </div>
-                  <a
-                    href="https://www.linkedin.com/in/benichidev"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    linkedin.com/in/benichidev
-                  </a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Github className="h-5 w-5 text-primary" />
-                  </div>
-                  <a
-                    href="https://github.com/IngBenichi"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    github.com/IngBenichi
-                  </a>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              <Separator className="my-8" />
+      {/* experience */}
+      <section id="experience" data-section="experience" style={{ padding: "120px 32px", background: "oklch(0.13 0.006 250)", borderTop: "1px solid oklch(1 0 0 / 0.06)", borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 56 }}>
+            <span style={eyebrowNum}>{t.expNum}</span>
+            <h2 style={{ fontFamily: SG, fontSize: 32, fontWeight: 600, margin: 0 }}>{t.expEyebrow}</h2>
+            <span style={dashedDot("oklch(0.7 0.16 25 / 0.5)")}>
+              <span style={{ position: "absolute", top: -2, left: "50%", width: 4, height: 4, marginLeft: -2, borderRadius: "50%", background: "oklch(0.7 0.16 25)" }} />
+            </span>
+          </div>
 
-              <div>
-                <h3 className="text-xl font-semibold mb-6">
-                  ¿Buscas un desarrollador backend?
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Actualmente estoy abierto a nuevas oportunidades donde pueda
-                  aportar mi experiencia construyendo sistemas backend
-                  escalables y APIs. Si necesitas ayuda en un proyecto
-                  específico o buscas sumar un especialista backend a tu equipo,
-                  ¡hablemos!
-                </p>
-                <p className="text-muted-foreground">
-                  No dudes en contactarme a través del formulario o cualquiera
-                  de los canales anteriores.
-                </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {DATA.experiences.map((ex, i) => (
+              <div key={ex.company} data-reveal style={{ border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 14, padding: 28, background: "oklch(0.16 0.006 250 / 0.6)", fontFamily: MONO, transitionDelay: `${i * 120}ms` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ex.logo} alt={ex.company} style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", border: "1px solid oklch(1 0 0 / 0.12)" }} />
+                    <div>
+                      <div style={{ fontFamily: SG, fontSize: 17, fontWeight: 600, color: "oklch(0.97 0.003 250)" }}>{ex.company}</div>
+                      <div style={{ fontSize: 12.5, color: "oklch(0.75 0.14 150)", marginTop: 2 }}>{ex.position[lang]}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right", fontSize: 11, color: "oklch(0.55 0.01 250)" }}>
+                    <div>{ex.period}</div>
+                    <div>{ex.location[lang]}</div>
+                  </div>
+                </div>
+                <p style={{ fontFamily: BODY, fontSize: 14.5, lineHeight: 1.6, color: "oklch(0.68 0.012 250)", margin: "0 0 16px 0" }}>{ex.desc[lang]}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {ex.achievements[lang].map((ac, j) => (
+                    <div key={j} style={{ display: "flex", gap: 10, fontFamily: BODY, fontSize: 13.5, color: "oklch(0.78 0.01 250)", lineHeight: 1.5 }}>
+                      <span style={{ color: "oklch(0.5 0.01 250)", flexShrink: 0 }}>›</span>
+                      {ac}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
 
+          <div style={{ marginTop: 40, border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 14, padding: "24px 28px", background: "oklch(0.16 0.006 250 / 0.6)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
-              <ContactForm />
+              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: "oklch(0.5 0.01 250)", marginBottom: 8 }}>{t.eduTitle}</div>
+              <div style={{ fontFamily: SG, fontSize: 17, fontWeight: 600 }}>{t.eduDegree}</div>
+              <div style={{ fontSize: 13.5, color: "oklch(0.65 0.012 250)", marginTop: 3 }}>{t.eduInst}</div>
             </div>
+            <div style={{ fontFamily: MONO, fontSize: 12, color: "oklch(0.55 0.01 250)" }}>{t.eduPeriod}</div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Optional Blog Section Teaser */}
-
-      {/* Footer */}
-      <footer className="py-4 px-2 bg-muted">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p className="text-muted-foreground">
-                © {new Date().getFullYear()} Camilo Benitez. Todos los derechos
-                reservados.
-              </p>
-            </div>
-            <div className="flex gap-4"></div>
+      {/* contact */}
+      <section id="contact" data-section="contact" style={{ padding: "140px 32px", textAlign: "center" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", color: "oklch(0.75 0.14 150)", marginBottom: 20 }}>{t.contactEyebrow}</div>
+          <h2 style={{ fontFamily: SG, fontSize: "clamp(28px,5vw,44px)", fontWeight: 600, margin: "0 0 20px 0" }}>{t.contactTitle}</h2>
+          <p style={{ fontSize: 16, lineHeight: 1.7, color: "oklch(0.68 0.012 250)", margin: "0 0 44px 0" }}>{t.contactCopy}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+            {CONTACT_LINKS.map((cl) => (
+              <a key={cl.href} href={cl.href} target="_blank" rel="noopener noreferrer" onMouseMove={magnetMove} onMouseLeave={magnetLeave} style={{ fontFamily: MONO, fontSize: 14, color: "oklch(0.9 0.005 250)", border: "1px solid oklch(1 0 0 / 0.16)", borderRadius: 8, padding: "12px 22px", width: "min(340px,100%)", boxSizing: "border-box", textDecoration: "none" }}>
+                {cl.cmd}
+              </a>
+            ))}
           </div>
         </div>
+      </section>
+
+      <footer style={{ padding: "28px 32px", textAlign: "center", borderTop: "1px solid oklch(1 0 0 / 0.06)", fontFamily: MONO, fontSize: 11.5, color: "oklch(0.45 0.01 250)" }}>
+        © {new Date().getFullYear()} Camilo Benítez — {t.footer}
       </footer>
-    </main>
+    </div>
   );
 }
