@@ -8,7 +8,7 @@ export async function login(email: string, password: string) {
   const validPassword = process.env.ADMIN_PASSWORD
 
   if (!validEmail || !validPassword) {
-    return { success: false, error: "Authentication credentials not configured" }
+    return { success: false, error: "Credenciales de administrador no configuradas en el servidor" }
   }
 
   if (email === validEmail && password === validPassword) {
@@ -23,7 +23,7 @@ export async function login(email: string, password: string) {
     return { success: true }
   }
 
-  return { success: false, error: "Invalid email or password" }
+  return { success: false, error: "Email o contraseña incorrectos" }
 }
 
 export async function logout() {
